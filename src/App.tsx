@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -58,7 +58,9 @@ export default function App() {
               <Route path="/dashboard" element={<JobAnalyzerPage />} />
               <Route path="/analyzer" element={<JobAnalyzerPage />} />
               <Route path="/analyzer/:jobId" element={<JobAnalyzerPage />} />
-              <Route path="/portfolio" element={<PortfolioPage />} />
+              <Route path="/portfolio" element={<Navigate to="/dashboard?view=profiles" replace />} />
+              <Route path="/profiles" element={<Navigate to="/dashboard?view=profiles" replace />} />
+              <Route path="/profile" element={<Navigate to="/dashboard?view=profiles" replace />} />
             </Route>
           </Route>
 
