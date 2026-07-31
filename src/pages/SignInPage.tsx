@@ -42,8 +42,14 @@ export const SignInPage: React.FC = () => {
       setIsSubmitting(false);
       navigate('/dashboard');
     } catch (err: any) {
-      setErrorMsg('Google sign-in failed.');
       setIsSubmitting(false);
+      if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+        setErrorMsg('Sign-in popup was closed before completing. Please try again.');
+      } else if (err?.code === 'auth/popup-blocked') {
+        setErrorMsg('Sign-in popup was blocked by your browser. Please allow popups for this site.');
+      } else {
+        setErrorMsg(err?.message || 'Google sign-in failed. Please try again.');
+      }
     }
   };
 
