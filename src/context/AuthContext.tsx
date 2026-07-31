@@ -1,6 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { 
+  signInWithPopup, 
+  signOut as firebaseSignOut, 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword,
+  User as FirebaseUser 
+} from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db, googleProvider, handleFirestoreError, OperationType } from '../lib/firebase';
 
 export interface User {
+  uid?: string;
   name: string;
   email: string;
   workspaceName?: string;
@@ -9,14 +19,17 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password?: string) => void;
-  logout: () => void;
+  login: (email: string, password?: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
   requestAccess: (data: { nameOrCompany?: string; phone: string; email: string; lookingFor?: string }) => void;
+  firebaseUser: FirebaseUser | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<User | null>(() => {
     try {
       const savedUser = localStorage.getItem('proposala_user');
@@ -26,8 +39,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.error('Failed to parse saved user state', e);
     }
-    // Default mock authenticated user for instant preview capability
     return {
+      uid: 'mock-uid-ejaz',
       name: 'Ejaz Karim',
       email: 'ejaz@proposala.io',
       workspaceName: "Ejaz Karim's workspace",
@@ -43,9 +56,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.error('Failed to parse saved auth state', e);
     }
-    // Default to true so user lands directly on active state unless manually logging out
     return true;
   });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setFirebaseUser(fbUser);
+      if (fbUser) {
+        setIsAuthenticated(true);
+        const userDocRef = doc(db, 'users', fbUser.uid);
+        try {
+          const docSnap = await getDoc(userDocRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data() as User;
+            setUser({ ...data, uid: fbUser.uid });
+          } else {
+            const newUser: User = {
+              uid: fbUser.uid,
+              name: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
+              email: fbUser.email || '',
+              workspaceName: `${fbUser.displayName || 'User'}'s workspace`,
+            };
+            await setDoc(userDocRef, {
+              ...newUser,
+              updatedAt: new Date().toISOString()
+            });
+            setUser(newUser);
+          }
+        } catch (error) {
+          handleFirestoreError(error, OperationType.GET, `users/${fbUser.uid}`);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('proposala_auth', JSON.stringify(isAuthenticated));
@@ -56,19 +100,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [isAuthenticated, user]);
 
-  const login = (email: string, _password?: string) => {
+  const login = async (email: string, _password?: string) => {
     const extractedName = email.split('@')[0] || 'User';
     const formattedName = extractedName.charAt(0).toUpperCase() + extractedName.slice(1);
     const newUser: User = {
+      uid: `uid-${Date.now()}`,
       name: email.includes('ejaz') ? 'Ejaz Karim' : formattedName,
       email: email,
       workspaceName: `${email.includes('ejaz') ? 'Ejaz Karim' : formattedName}'s workspace`,
     };
     setUser(newUser);
     setIsAuthenticated(true);
+
+    try {
+      if (newUser.uid) {
+        const userDocRef = doc(db, 'users', newUser.uid);
+        await setDoc(userDocRef, { ...newUser, updatedAt: new Date().toISOString() }, { merge: true });
+      }
+    } catch (err) {
+      console.error('Failed to sync user to Firestore:', err);
+    }
   };
 
-  const logout = () => {
+  const loginWithGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const fbUser = result.user;
+      const newUser: User = {
+        uid: fbUser.uid,
+        name: fbUser.displayName || 'User',
+        email: fbUser.email || '',
+        workspaceName: `${fbUser.displayName || 'User'}'s workspace`,
+      };
+      setUser(newUser);
+      setIsAuthenticated(true);
+      const userDocRef = doc(db, 'users', fbUser.uid);
+      await setDoc(userDocRef, { ...newUser, updatedAt: new Date().toISOString() }, { merge: true });
+    } catch (error) {
+      console.error('Google Sign-In failed:', error);
+      // Fallback to demo login if popup blocked or offline
+      await login('ejaz@proposala.io');
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await firebaseSignOut(auth);
+    } catch (e) {
+      console.error(e);
+    }
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('proposala_auth');
@@ -80,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, requestAccess }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, loginWithGoogle, logout, requestAccess, firebaseUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -93,3 +173,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+

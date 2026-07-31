@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation helpers
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'email', 'name']) &&
+             data.keys().size() <= 5 &&
+             data.uid is string && data.uid.size() <= 128 &&
+             data.email is string && data.email.size() <= 254 &&
+             data.name is string && data.name.size() <= 100 &&
+             (!data.keys().hasAll(['workspaceName']) || (data.workspaceName is string && data.workspaceName.size() <= 100)) &&
+             (!data.keys().hasAll(['updatedAt']) || data.updatedAt is string);
+    }
+
+    function isValidPortfolioProject(data) {
+      return data.keys().hasAll(['id', 'userId', 'title', 'summary']) &&
+             data.keys().size() <= 10 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() <= 200 &&
+             data.summary is string && data.summary.size() <= 2000 &&
+             data.userId == request.auth.uid &&
+             (!data.keys().hasAll(['clientIndustry']) || (data.clientIndustry is string && data.clientIndustry.size() <= 100)) &&
+             (!data.keys().hasAll(['techStack']) || (data.techStack is list && data.techStack.size() <= 30)) &&
+             (!data.keys().hasAll(['metrics']) || (data.metrics is string && data.metrics.size() <= 200)) &&
+             (!data.keys().hasAll(['keyOutcome']) || (data.keyOutcome is string && data.keyOutcome.size() <= 500)) &&
+             (!data.keys().hasAll(['link']) || (data.link is string && data.link.size() <= 500)) &&
+             (!data.keys().hasAll(['createdAt']) || data.createdAt is string);
+    }
+
+    function isValidProposalRecord(data) {
+      return data.keys().hasAll(['id', 'userId', 'jobTitle', 'generatedProposal']) &&
+             data.keys().size() <= 7 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.jobTitle is string && data.jobTitle.size() <= 200 &&
+             data.generatedProposal is string && data.generatedProposal.size() <= 10000 &&
+             data.userId == request.auth.uid &&
+             (!data.keys().hasAll(['clientName']) || (data.clientName is string && data.clientName.size() <= 100)) &&
+             (!data.keys().hasAll(['matchScore']) || data.matchScore is number) &&
+             (!data.keys().hasAll(['createdAt']) || data.createdAt is string);
+    }
+
+    // Default catch-all deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User Profile
+    match /users/{userId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming()) && incoming().uid == userId;
+      allow update: if isOwner(userId) && isValidUserProfile(incoming()) && incoming().uid == existing().uid && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'workspaceName', 'email', 'updatedAt']);
+      allow delete: if isOwner(userId);
+
+      // Portfolio Projects Subcollection
+      match /portfolioProjects/{projectId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(projectId) && isValidPortfolioProject(incoming()) && incoming().id == projectId;
+        allow update: if isOwner(userId) && isValidPortfolioProject(incoming()) && incoming().id == existing().id && incoming().userId == existing().userId && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'clientIndustry', 'summary', 'techStack', 'metrics', 'keyOutcome', 'link']);
+        allow delete: if isOwner(userId);
+      }
+
+      // Proposals Subcollection
+      match /proposals/{proposalId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(proposalId) && isValidProposalRecord(incoming()) && incoming().id == proposalId;
+        allow update: if isOwner(userId) && isValidProposalRecord(incoming()) && incoming().id == existing().id && incoming().userId == existing().userId;
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

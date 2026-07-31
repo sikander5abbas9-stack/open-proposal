@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Database, Plus, Trash2, ArrowLeft, CheckCircle2, Sparkles, ExternalLink, 
@@ -6,8 +6,14 @@ import {
 } from 'lucide-react';
 import { DEFAULT_PORTFOLIO } from '../data/samplePortfolio';
 import { PortfolioProject } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { collection, doc, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
 
 export const PortfolioPage: React.FC = () => {
+  const { user } = useAuth();
+  const userId = user?.uid || 'mock-uid-ejaz';
+
   const [projects, setProjects] = useState<PortfolioProject[]>(() => {
     try {
       const saved = localStorage.getItem('proposala_portfolio');
@@ -17,6 +23,30 @@ export const PortfolioPage: React.FC = () => {
     }
     return DEFAULT_PORTFOLIO;
   });
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const colRef = collection(db, 'users', userId, 'portfolioProjects');
+        const snapshot = await getDocs(colRef);
+        if (!snapshot.empty) {
+          const fetched: PortfolioProject[] = snapshot.docs.map(d => d.data() as PortfolioProject);
+          setProjects(fetched);
+        } else {
+          // Initialize Firestore with default portfolio if empty
+          for (const p of DEFAULT_PORTFOLIO) {
+            const docRef = doc(db, 'users', userId, 'portfolioProjects', p.id);
+            await setDoc(docRef, { ...p, userId, createdAt: new Date().toISOString() });
+          }
+        }
+      } catch (error) {
+        handleFirestoreError(error, OperationType.LIST, `users/${userId}/portfolioProjects`);
+      }
+    };
+    if (userId) {
+      fetchProjects();
+    }
+  }, [userId]);
 
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [title, setTitle] = useState<string>('');
@@ -29,16 +59,24 @@ export const PortfolioPage: React.FC = () => {
   const [link, setLink] = useState<string>('');
   const [successNotice, setSuccessNotice] = useState<string>('');
 
-  const saveToStorage = (updatedList: PortfolioProject[]) => {
+  const saveToStorage = async (updatedList: PortfolioProject[], newProj?: PortfolioProject, deletedId?: string) => {
     setProjects(updatedList);
     try {
       localStorage.setItem('proposala_portfolio', JSON.stringify(updatedList));
+      if (newProj) {
+        const docRef = doc(db, 'users', userId, 'portfolioProjects', newProj.id);
+        await setDoc(docRef, { ...newProj, userId, createdAt: new Date().toISOString() });
+      }
+      if (deletedId) {
+        const docRef = doc(db, 'users', userId, 'portfolioProjects', deletedId);
+        await deleteDoc(docRef);
+      }
     } catch (e) {
       console.error(e);
     }
   };
 
-  const handleAddProject = (e: React.FormEvent) => {
+  const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !summary.trim()) return;
 
@@ -55,7 +93,7 @@ export const PortfolioPage: React.FC = () => {
     };
 
     const updated = [newProject, ...projects];
-    saveToStorage(updated);
+    await saveToStorage(updated, newProject);
 
     // Reset form
     setTitle('');
@@ -72,9 +110,9 @@ export const PortfolioPage: React.FC = () => {
     setTimeout(() => setSuccessNotice(''), 3000);
   };
 
-  const handleDeleteProject = (id: string) => {
+  const handleDeleteProject = async (id: string) => {
     const updated = projects.filter(p => p.id !== id);
-    saveToStorage(updated);
+    await saveToStorage(updated, undefined, id);
   };
 
   return (

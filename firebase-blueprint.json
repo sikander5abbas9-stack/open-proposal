@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 254 },
+        "name": { "type": "string", "maxLength": 100 },
+        "workspaceName": { "type": "string", "maxLength": 100 },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "name"]
+    },
+    "PortfolioProject": {
+      "title": "PortfolioProject",
+      "description": "Portfolio case study",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "clientIndustry": { "type": "string", "maxLength": 100 },
+        "summary": { "type": "string", "maxLength": 2000 },
+        "techStack": { "type": "array" },
+        "metrics": { "type": "string", "maxLength": 200 },
+        "keyOutcome": { "type": "string", "maxLength": 500 },
+        "link": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "title", "summary"]
+    },
+    "ProposalRecord": {
+      "title": "ProposalRecord",
+      "description": "Saved proposal generated from job analysis",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "jobTitle": { "type": "string", "maxLength": 200 },
+        "clientName": { "type": "string", "maxLength": 100 },
+        "generatedProposal": { "type": "string", "maxLength": 10000 },
+        "matchScore": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "jobTitle", "generatedProposal"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/users/{userId}/portfolioProjects/{projectId}": {
+      "schema": "PortfolioProject",
+      "description": "User portfolio projects"
+    },
+    "/users/{userId}/proposals/{proposalId}": {
+      "schema": "ProposalRecord",
+      "description": "User saved proposals"
+    }
+  }
+}
