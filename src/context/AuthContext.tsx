@@ -32,13 +32,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<User | null>(() => {
     try {
+      const savedAuth = localStorage.getItem('proposala_auth');
+      const isAuth = savedAuth !== null ? JSON.parse(savedAuth) : false;
       const savedUser = localStorage.getItem('proposala_user');
-      if (savedUser) {
+      if (isAuth && savedUser) {
         return JSON.parse(savedUser);
       }
     } catch (e) {
       console.error('Failed to parse saved user state', e);
     }
+    localStorage.removeItem('proposala_user');
     return null;
   });
 
