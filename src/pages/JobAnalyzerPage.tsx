@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { 
   Sparkles, ShieldCheck, CheckCircle2, ArrowRight, Zap, RefreshCw, 
   Copy, Check, AlertTriangle, ChevronDown, Clock, History, FolderGit2,
@@ -9,9 +9,10 @@ import {
   WifiOff, FileSpreadsheet, Share2, MessageSquare, ArrowUpRight, Sliders, Cpu, Layers3
 } from 'lucide-react';
 import { SAMPLE_JOBS } from '../data/sampleJobs';
-import { DEFAULT_PORTFOLIO } from '../data/samplePortfolio';
 import { JobAnalysisResult, PortfolioProject } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
 
 // Pentagon Radar Chart SVG Component
 interface RadarScores {
@@ -183,7 +184,48 @@ const ANALYSIS_STEPS = [
 export const JobAnalyzerPage: React.FC = () => {
   const { jobId } = useParams<{ jobId?: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, logout } = useAuth();
+
+  // Sync Profiles modal state with URL query parameters
+  const openProfilesModal = () => {
+    setShowTeamModal(true);
+    setActiveNav('team');
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('view', 'profiles');
+      return next;
+    }, { replace: true });
+  };
+
+  // WhatsApp Share helper
+  const handleShareWhatsApp = () => {
+    const shareUrl = `${window.location.origin}/dashboard?view=profiles`;
+    const message = `🚀 *Proposala Workspace - Profiles & Team Details*
+
+📌 *Active Profile:* ${selectedProfile}
+👤 *Workspace Owner:* ${user?.name || "Ejaz Karim"} (${user?.email || "hafeez@gmail.com"})
+💼 *Role:* Senior Freelance Technical Lead
+⚡ *Proposala AI:* AI-powered Upwork proposal optimization & technical profile matching
+
+🔗 *Direct Profiles Link:* ${shareUrl}
+`;
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, "_blank");
+    addToast("Opening WhatsApp share...", "info");
+  };
+
+  const closeProfilesModal = () => {
+    setShowTeamModal(false);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('view');
+      next.delete('tab');
+      next.delete('modal');
+      next.delete('profile');
+      return next;
+    }, { replace: true });
+  };
 
   // Mobile Drawer & Workspace State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -196,6 +238,7 @@ export const JobAnalyzerPage: React.FC = () => {
   // Modal / Slideover states
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
+  const [profilesModalTab, setProfilesModalTab] = useState<'profiles' | 'team' | 'portfolio'>('profiles');
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [showCaseStudyDrawer, setShowCaseStudyDrawer] = useState(false);
@@ -204,6 +247,15 @@ export const JobAnalyzerPage: React.FC = () => {
 
   // Connection Alert State
   const [isOfflineMode, setIsOfflineMode] = useState(false);
+
+  // Sync Profiles modal state with URL query parameters
+  useEffect(() => {
+    const viewParam = searchParams.get('view') || searchParams.get('tab') || searchParams.get('modal') || searchParams.get('profile');
+    if (viewParam === 'profiles' || viewParam === 'profile' || viewParam === 'open' || viewParam === 'true') {
+      setShowTeamModal(true);
+      setActiveNav('team');
+    }
+  }, [searchParams]);
 
   // Toast System State
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
@@ -229,18 +281,59 @@ export const JobAnalyzerPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const userId = user?.uid || 'mock-uid-ejaz';
+
   // Portfolio state
   const [portfolioProjects, setPortfolioProjects] = useState<PortfolioProject[]>(() => {
     try {
-      const saved = localStorage.getItem('proposala_portfolio');
+      const saved = localStorage.getItem(`proposala_portfolio_${userId}`);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error(e);
     }
-    return DEFAULT_PORTFOLIO;
+    return [];
   });
 
-  const [selectedPortfolioId, setSelectedPortfolioId] = useState<string>(portfolioProjects[0]?.id || 'port-1');
+  useEffect(() => {
+    const fetchUserPortfolio = async () => {
+      try {
+        const colRef = collection(db, 'users', userId, 'portfolioProjects');
+        const snapshot = await getDocs(colRef);
+        if (!snapshot.empty) {
+          const fetched: PortfolioProject[] = snapshot.docs.map(d => d.data() as PortfolioProject);
+          setPortfolioProjects(fetched);
+          localStorage.setItem(`proposala_portfolio_${userId}`, JSON.stringify(fetched));
+        } else {
+          setPortfolioProjects([]);
+        }
+      } catch (error) {
+        handleFirestoreError(error, OperationType.LIST, `users/${userId}/portfolioProjects`);
+      }
+    };
+    if (userId) {
+      fetchUserPortfolio();
+    }
+  }, [userId]);
+
+  const fallbackProject: PortfolioProject = {
+    id: 'fallback-1',
+    title: 'Full-Stack Web Application',
+    summary: 'High performance scalable web application built with modern stack.',
+    clientIndustry: 'SaaS / Enterprise',
+    techStack: ['React', 'TypeScript', 'Tailwind', 'Node.js'],
+    metrics: '99.9% uptime, -50% load latency',
+    keyOutcome: 'Delivered robust production-grade scaling.',
+    relevantSkills: ['React', 'TypeScript', 'Tailwind'],
+    link: ''
+  };
+
+  const getActiveProject = (overrideId?: string) => {
+    if (portfolioProjects.length === 0) return fallbackProject;
+    const idToFind = overrideId || selectedPortfolioId;
+    return portfolioProjects.find((p) => p.id === idToFind) || portfolioProjects[0] || fallbackProject;
+  };
+
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState<string>(portfolioProjects[0]?.id || 'fallback-1');
 
   // Inputs & Configuration State
   const [selectedProfile, setSelectedProfile] = useState<string>('Senior Fullstack Developer');
@@ -345,7 +438,7 @@ export const JobAnalyzerPage: React.FC = () => {
     }, 450);
 
     const sample = SAMPLE_JOBS.find((j) => j.id === (targetId || selectedSampleId)) || SAMPLE_JOBS[0];
-    const activeProject = portfolioProjects.find((p) => p.id === selectedPortfolioId) || portfolioProjects[0];
+    const activeProject = getActiveProject();
 
     setTimeout(() => {
       clearInterval(stepInterval);
@@ -470,7 +563,7 @@ export const JobAnalyzerPage: React.FC = () => {
     style: 'Direct & Short' | 'Value Focused' | 'Detailed',
     projectOverride?: PortfolioProject
   ) => {
-    const activeProject = projectOverride || portfolioProjects.find((p) => p.id === selectedPortfolioId) || portfolioProjects[0];
+    const activeProject = projectOverride || getActiveProject();
     const caseStudyRef = `Specifically, on the "${activeProject.title}" project, I used ${activeProject.techStack.slice(0, 3).join(', ')} to deliver ${activeProject.metrics || '-74% load latency and 99.9% uptime'}.`;
 
     if (style === 'Direct & Short') {
@@ -520,7 +613,7 @@ export const JobAnalyzerPage: React.FC = () => {
           date: new Date().toISOString().split('T')[0],
           score: analysisResult?.score || 94,
           status: newStatus,
-          matchedWork: portfolioProjects.find((p) => p.id === selectedPortfolioId)?.title || 'FinTech Analytics Dashboard',
+          matchedWork: getActiveProject().title,
           clientName: 'Upwork Client',
         },
         ...prev,
@@ -533,7 +626,7 @@ export const JobAnalyzerPage: React.FC = () => {
   // AI Refine Quick Actions
   const handleAIRefine = (action: 'shorter' | 'professional' | 'pastwork' | 'question') => {
     setIsRefiningAI(true);
-    const activeProject = portfolioProjects.find((p) => p.id === selectedPortfolioId) || portfolioProjects[0];
+    const activeProject = getActiveProject();
 
     setTimeout(() => {
       if (action === 'shorter') {
@@ -574,7 +667,7 @@ export const JobAnalyzerPage: React.FC = () => {
   };
 
   // New Portfolio Submission
-  const handleCreatePortfolioItem = (e: React.FormEvent) => {
+  const handleCreatePortfolioItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProjectForm.title || !newProjectForm.summary || !newProjectForm.techStackStr) {
       setPortfolioFormError('Please fill in Project Title, Summary, and Tech Stack.');
@@ -596,7 +689,9 @@ export const JobAnalyzerPage: React.FC = () => {
     const updatedList = [newProj, ...portfolioProjects];
     setPortfolioProjects(updatedList);
     try {
-      localStorage.setItem('proposala_portfolio', JSON.stringify(updatedList));
+      localStorage.setItem(`proposala_portfolio_${userId}`, JSON.stringify(updatedList));
+      const docRef = doc(db, 'users', userId, 'portfolioProjects', newProj.id);
+      await setDoc(docRef, { ...newProj, userId, createdAt: new Date().toISOString() });
     } catch (e) {
       console.error(e);
     }
@@ -697,7 +792,7 @@ export const JobAnalyzerPage: React.FC = () => {
 
   // Active Portfolio Project for Card C
   const activePortfolioProject = useMemo(() => {
-    return portfolioProjects.find((p) => p.id === selectedPortfolioId) || portfolioProjects[0];
+    return getActiveProject();
   }, [portfolioProjects, selectedPortfolioId]);
 
   // Radar Scores calculated
@@ -711,7 +806,7 @@ export const JobAnalyzerPage: React.FC = () => {
   const readingTimeSec = Math.ceil((wordCount / 200) * 60);
 
   return (
-    <div className="min-h-screen bg-[#f7f2e8] text-[#17140f] font-sans antialiased flex selection:bg-[#17140f] selection:text-[#f7f2e8] relative">
+    <div className="min-h-screen bg-[#F4F8F5] text-[#17140f] font-sans antialiased flex selection:bg-[#17140f] selection:text-[#f7f2e8] relative">
 
       {/* Toast Notification Container */}
       <div className="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none max-w-sm w-full">
@@ -751,70 +846,65 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {/* 1. SIDEBAR (Fixed Left, width 240px)      */}
       {/* ========================================== */}
-      <aside className={`w-[240px] bg-[#f7f2e8] border-r border-[#ddd2bf] flex flex-col justify-between shrink-0 h-screen sticky top-0 z-40 transition-transform duration-200 ${
+      <aside className={`w-[240px] bg-[#0c1017] border-r border-[#1e293b] flex flex-col justify-between shrink-0 h-screen sticky top-0 z-40 transition-transform duration-200 ${
         mobileMenuOpen ? 'fixed inset-y-0 left-0 translate-x-0' : 'hidden md:flex'
       }`}>
         
-        <div className="p-4 space-y-5 overflow-y-auto">
+        <div className="p-4 space-y-4 overflow-y-auto">
           
           {/* Brand Title */}
           <div className="flex items-center justify-between px-1 pt-1">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#17140f] flex items-center justify-center text-[#f7f2e8] shadow-sm">
-                <Sparkles className="w-4 h-4 text-[#f7f2e8] stroke-[2.5]" />
-              </div>
-              <div>
-                <span className="text-sm font-bold tracking-wider text-[#17140f] uppercase font-serif">
-                  PROPOSALA
-                </span>
-                <div className="text-[10px] text-[#17140f]/70 font-mono tracking-tight">
-                  Analyzer v2.4
-                </div>
-              </div>
-            </div>
+            <Link to="/" className="flex items-center gap-2 group">
+              <span className="text-base font-extrabold tracking-tight text-white font-mono">
+                proposala
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono font-bold">
+                new proposal
+              </span>
+            </Link>
             {mobileMenuOpen && (
               <button 
                 onClick={() => setMobileMenuOpen(false)}
-                className="md:hidden text-[#17140f]/70 hover:text-[#17140f] p-1"
+                className="md:hidden text-gray-400 hover:text-white p-1"
               >
                 <X className="w-5 h-5" />
               </button>
             )}
           </div>
 
-          {/* Workspace Dropdown Pill */}
+          {/* Workspace Selector */}
           <div className="relative">
             <button
               onClick={() => setIsWorkspaceOpen(!isWorkspaceOpen)}
-              className="w-full flex items-center justify-between p-2.5 rounded-lg bg-white border border-[#ddd2bf] hover:border-[#17140f] text-xs text-left transition-colors cursor-pointer group shadow-xs"
+              className="w-full flex items-center justify-between p-2 rounded-lg bg-[#121824] border border-[#1e293b] hover:border-[#334155] text-xs text-left transition-colors cursor-pointer group shadow-xs"
             >
               <div className="flex items-center gap-2 truncate">
-                <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0" />
-                <span className="font-medium text-[#17140f] truncate">{activeWorkspace}</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                <span className="font-semibold text-gray-200 truncate">{activeWorkspace}</span>
               </div>
-              <ChevronDown className="w-3.5 h-3.5 text-[#17140f]/60 group-hover:text-[#17140f] shrink-0 transition-transform" />
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:text-white shrink-0 transition-transform" />
             </button>
 
             {/* Workspace Dropdown Menu */}
             {isWorkspaceOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#ddd2bf] rounded-lg shadow-xl z-50 p-1 space-y-0.5 animate-in fade-in zoom-in-95">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-[#121824] border border-[#1e293b] rounded-lg shadow-2xl z-50 p-1 space-y-0.5 animate-in fade-in zoom-in-95">
                 <button
                   onClick={() => { setActiveWorkspace(user?.workspaceName || "Ejaz Karim's workspace"); setIsWorkspaceOpen(false); }}
-                  className="w-full text-left px-2.5 py-1.5 text-xs text-[#17140f] hover:bg-[#17140f]/5 rounded flex items-center justify-between font-medium"
+                  className="w-full text-left px-2.5 py-1.5 text-xs text-white hover:bg-[#1e293b] rounded flex items-center justify-between font-medium"
                 >
                   <span className="truncate">{user?.workspaceName || "Ejaz Karim's workspace"}</span>
-                  <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 </button>
                 <button
                   onClick={() => { setActiveWorkspace("Agency Team Workspace"); setIsWorkspaceOpen(false); }}
-                  className="w-full text-left px-2.5 py-1.5 text-xs text-[#17140f]/70 hover:bg-[#17140f]/5 hover:text-[#17140f] rounded truncate"
+                  className="w-full text-left px-2.5 py-1.5 text-xs text-gray-400 hover:bg-[#1e293b] hover:text-white rounded truncate"
                 >
                   Agency Team Workspace
                 </button>
-                <div className="border-t border-[#ddd2bf] my-1" />
+                <div className="border-t border-[#1e293b] my-1" />
                 <button
                   onClick={() => { setIsWorkspaceOpen(false); setShowSettingsModal(true); }}
-                  className="w-full text-left px-2.5 py-1.5 text-xs text-[#17140f] hover:bg-[#17140f]/5 rounded flex items-center gap-1.5 font-semibold"
+                  className="w-full text-left px-2.5 py-1.5 text-xs text-emerald-400 hover:bg-[#1e293b] rounded flex items-center gap-1.5 font-semibold"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Workspace Settings</span>
@@ -823,120 +913,152 @@ export const JobAnalyzerPage: React.FC = () => {
             )}
           </div>
 
-          {/* Main Navigation Links */}
-          <nav className="space-y-1">
+          {/* Sidebar Section Groups */}
+          <div className="space-y-4 pt-1">
             
-            {/* New Proposal (Highlighted Button) */}
-            <button
-              onClick={() => {
-                setActiveNav('new');
-                setSelectedSampleId(SAMPLE_JOBS[0].id);
-                runAnalysis(SAMPLE_JOBS[0].id);
-                setMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold bg-[#17140f] hover:bg-[#27241e] text-[#f7f2e8] font-mono shadow-md transition-all cursor-pointer mb-3"
-            >
-              <Plus className="w-4 h-4 text-[#ddd2bf]" />
-              <span>New Proposal</span>
-            </button>
+            {/* WORK Group */}
+            <div className="space-y-1">
+              <div className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-wider px-2">Work</div>
+              
+              <button
+                onClick={() => {
+                  setActiveNav('new');
+                  setSelectedSampleId(SAMPLE_JOBS[0].id);
+                  runAnalysis(SAMPLE_JOBS[0].id);
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono transition-all cursor-pointer ${
+                  activeNav === 'new'
+                    ? 'bg-[#1e293b] text-white font-bold border-l-2 border-emerald-400'
+                    : 'text-gray-400 hover:text-white hover:bg-[#121824]'
+                }`}
+              >
+                <Plus className="w-3.5 h-3.5 text-emerald-400" />
+                <span>+ New proposal</span>
+              </button>
 
-            {/* Proposals History */}
-            <button
-              onClick={() => {
-                setActiveNav('history');
-                setShowHistoryModal(true);
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                activeNav === 'history'
-                  ? 'bg-[#17140f] text-[#f7f2e8] font-semibold'
-                  : 'text-[#17140f]/70 hover:bg-[#17140f]/5 hover:text-[#17140f]'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <History className="w-4 h-4 text-[#17140f]/70" />
-                <span>Proposals History</span>
-              </div>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${
-                activeNav === 'history' ? 'bg-[#f7f2e8] text-[#17140f]' : 'bg-[#17140f]/10 text-[#17140f]'
-              }`}>
-                {proposalsHistory.length}
-              </span>
-            </button>
+              <button
+                onClick={() => {
+                  openProfilesModal();
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer ${
+                  searchParams.get("view") === "profiles" || activeNav === "team"
+                    ? "bg-[#1e293b] text-white font-bold border-l-2 border-emerald-400"
+                    : "text-gray-400 hover:text-white hover:bg-[#121824]"
+                }`}
+              >
+                <Users className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Profiles</span>
+              </button>
 
-            {/* Past Work Hub */}
-            <Link
-              to="/portfolio"
-              onClick={() => {
-                setActiveNav('pastwork');
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                activeNav === 'pastwork'
-                  ? 'bg-[#17140f] text-[#f7f2e8] font-semibold'
-                  : 'text-[#17140f]/70 hover:bg-[#17140f]/5 hover:text-[#17140f]'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <FolderGit2 className="w-4 h-4 text-[#17140f]/70" />
-                <span>Past Work Hub</span>
-              </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 font-mono font-bold">
-                {portfolioProjects.length}
-              </span>
-            </Link>
+              <button
+                onClick={() => addToast('Dial Center active', 'info')}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono text-gray-400 hover:text-white hover:bg-[#121824] transition-colors"
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span>Dial Center</span>
+              </button>
+            </div>
 
-            {/* Team & Profiles */}
-            <button
-              onClick={() => {
-                setActiveNav('team');
-                setShowTeamModal(true);
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                activeNav === 'team'
-                  ? 'bg-[#17140f] text-[#f7f2e8] font-semibold'
-                  : 'text-[#17140f]/70 hover:bg-[#17140f]/5 hover:text-[#17140f]'
-              }`}
-            >
-              <Users className="w-4 h-4 text-[#17140f]/70" />
-              <span>Team & Profiles</span>
-            </button>
+            {/* DATABASE Group */}
+            <div className="space-y-1">
+              <div className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-wider px-2">Database</div>
 
-            {/* Settings */}
-            <button
-              onClick={() => {
-                setActiveNav('settings');
-                setShowSettingsModal(true);
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                activeNav === 'settings'
-                  ? 'bg-[#17140f] text-[#f7f2e8] font-semibold'
-                  : 'text-[#17140f]/70 hover:bg-[#17140f]/5 hover:text-[#17140f]'
-              }`}
-            >
-              <Settings className="w-4 h-4 text-[#17140f]/70" />
-              <span>Settings</span>
-            </button>
+              <button
+                onClick={() => {
+                  openProfilesModal();
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer ${
+                  searchParams.get("view") === "profiles"
+                    ? "bg-[#1e293b] text-white font-bold border-l-2 border-indigo-400"
+                    : "text-gray-400 hover:text-white hover:bg-[#121824]"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <FolderGit2 className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Profiles</span>
+                </div>
+                <span className="text-[10px] px-1 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-mono">
+                  {portfolioProjects.length}
+                </span>
+              </button>
 
-          </nav>
+              <button
+                onClick={() => {
+                  setActiveNav('history');
+                  setShowHistoryModal(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-mono text-gray-400 hover:text-white hover:bg-[#121824] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <History className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Proposal Library</span>
+                </div>
+                <span className="text-[10px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono">
+                  {proposalsHistory.length}
+                </span>
+              </button>
+            </div>
+
+            {/* INSIGHTS Group */}
+            <div className="space-y-1">
+              <div className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-wider px-2">Insights</div>
+              <button
+                onClick={() => {
+                  setActiveNav('new');
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono text-gray-400 hover:text-white hover:bg-[#121824] transition-colors"
+              >
+                <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Dashboard</span>
+              </button>
+            </div>
+
+            {/* WORKSPACE Group */}
+            <div className="space-y-1">
+              <div className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-wider px-2">Workspace</div>
+              
+              <button
+                onClick={() => {
+                  openProfilesModal();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono text-gray-400 hover:text-white hover:bg-[#121824] transition-colors cursor-pointer"
+              >
+                <Users className="w-3.5 h-3.5 text-gray-400" />
+                <span>Team</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowSettingsModal(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono text-gray-400 hover:text-white hover:bg-[#121824] transition-colors"
+              >
+                <Settings className="w-3.5 h-3.5 text-gray-400" />
+                <span>Settings</span>
+              </button>
+            </div>
+
+          </div>
 
         </div>
 
-        {/* Sidebar Bottom Section: User Profile & Status */}
-        <div className="p-3 border-t border-[#ddd2bf] bg-[#f7f2e8]">
-          <div className="flex items-center justify-between p-2 rounded-lg bg-white border border-[#ddd2bf] shadow-xs">
-            <div className="flex items-center gap-2.5 truncate">
-              <div className="relative shrink-0">
-                <div className="w-8 h-8 rounded-full bg-[#17140f] text-[#f7f2e8] text-xs font-bold flex items-center justify-center">
-                  {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'EK'}
-                </div>
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white" />
+        {/* Sidebar Bottom Section: Account */}
+        <div className="p-3 border-t border-[#1e293b] bg-[#090d14]">
+          <div className="flex items-center justify-between p-2 rounded-lg bg-[#121824] border border-[#1e293b]">
+            <div className="flex items-center gap-2 truncate">
+              <div className="w-7 h-7 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'EK'}
               </div>
               <div className="truncate text-left">
-                <div className="text-xs font-semibold text-[#17140f] truncate">{user?.name || 'Ejaz Karim'}</div>
-                <div className="text-[10px] text-[#17140f]/60 truncate">{user?.email || 'ejaz@proposala.io'}</div>
+                <div className="text-xs font-semibold text-gray-200 truncate">{user?.name || 'Ejaz Karim'}</div>
+                <div className="text-[10px] text-gray-400 truncate">{user?.email || 'hafeez@gmail.com'}</div>
               </div>
             </div>
             
@@ -946,7 +1068,7 @@ export const JobAnalyzerPage: React.FC = () => {
                 navigate('/login');
               }}
               title="Sign out"
-              className="p-1.5 text-[#17140f]/60 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer shrink-0 ml-1"
+              className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-[#1e293b] rounded-md transition-colors cursor-pointer shrink-0 ml-1"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -958,73 +1080,34 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {/* 2. MAIN CONTENT AREA (Scrollable panel)    */}
       {/* ========================================== */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-[#090d14]">
         
-        {/* Top Bar Header */}
-        <header className="px-4 sm:px-6 py-4 bg-[#121214] border-b border-[#27272A] flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30">
-          
-          {/* Breadcrumb & Mobile Menu Button */}
+        {/* Proposala Terminal Top Header Bar */}
+        <header className="sticky top-0 z-20 bg-[#0c1017]/95 backdrop-blur-md border-b border-[#1e293b] px-4 sm:px-6 py-2.5 flex items-center justify-between text-white shrink-0 font-mono text-xs">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden text-gray-400 hover:text-white p-1 rounded-md hover:bg-[#18181B]"
+              className="md:hidden p-1 text-gray-400 hover:text-white"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-gray-400 font-mono">Proposala</span>
-              <span className="text-gray-600">/</span>
-              <span className="text-white font-semibold">Job Analysis</span>
-            </div>
+            <span className="text-gray-400">{activeWorkspace}</span>
+            <span className="text-gray-600">/</span>
+            <span className="text-white font-bold">Proposala</span>
+            <span className="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">
+              new proposal
+            </span>
           </div>
 
-          {/* Right Top Status Metadata & Offline Mode Toggle */}
-          <div className="flex items-center gap-4">
-            
-            {/* Live UTC Timestamp */}
-            <div className="flex items-center gap-1.5 text-xs text-gray-400 font-mono hidden sm:flex">
-              <Clock className="w-3.5 h-3.5 text-gray-500" />
-              <span>{utcTime || '2026-07-30 18:14:00 UTC'}</span>
-            </div>
-
-            {/* Network / Offline Mode Toggle */}
-            <button
-              onClick={() => {
-                setIsOfflineMode(!isOfflineMode);
-                addToast(isOfflineMode ? 'Reconnected to Cloud Servers.' : 'Switched to Offline Mode simulation.', isOfflineMode ? 'success' : 'warning');
-              }}
-              className={`flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer ${
-                isOfflineMode
-                  ? 'bg-amber-950/80 border border-amber-800/60 text-amber-300'
-                  : 'bg-emerald-950/60 border border-emerald-800/40 text-emerald-400'
-              }`}
-              title="Click to toggle simulated connection status"
-            >
-              {isOfflineMode ? (
-                <>
-                  <WifiOff className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Offline Mode</span>
-                </>
-              ) : (
-                <>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Systems Operational</span>
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => {
-                logout();
-                navigate('/login');
-              }}
-              className="text-xs text-gray-400 hover:text-white transition-colors ml-2 hidden sm:block cursor-pointer"
-            >
-              Sign out
-            </button>
-
+          <div className="hidden sm:flex items-center gap-4 text-[11px] text-gray-400">
+            <span>{utcTime}</span>
+            <span className="text-gray-600">|</span>
+            <span className="text-emerald-400">0 5193071</span>
+            <span className="text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded bg-emerald-500/10 font-bold">
+              FIT SAVED -&gt;
+            </span>
+            <span className="text-gray-400">31 SAVED</span>
           </div>
-
         </header>
 
         {/* Offline Banner Alert */}
@@ -1041,128 +1124,105 @@ export const JobAnalyzerPage: React.FC = () => {
         )}
 
         {/* Dashboard Main Scroll Container - IDE Split View Layout */}
-        <main className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+        <main className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1500px] w-full mx-auto">
           
-          {/* TOP HEADER STATUS BAR */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#18181B] border border-[#27272A] p-4 rounded-xl shadow-md">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <Sliders className="w-5 h-5 stroke-[2]" />
-              </div>
-              <div>
-                <h1 className="text-sm font-bold text-white tracking-wide uppercase font-mono">
-                  IDE PROPOSAL STUDIO & AI ANALYZER
-                </h1>
-                <p className="text-xs text-gray-400">
-                  Configure strategy, filter portfolio proofs, and generate winning Upwork proposals in seconds.
-                </p>
-              </div>
-            </div>
 
-            {/* AI Engine Status Pill */}
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono text-gray-400">Model:</span>
-              <span className="text-xs font-mono font-bold px-2.5 py-1 rounded bg-[#121214] border border-[#27272A] text-emerald-400 flex items-center gap-1.5">
-                <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{aiModel}</span>
-              </span>
-            </div>
-          </div>
 
-          {/* MAIN IDE HORIZONTAL SPLIT GRID (LEFT CONFIG vs RIGHT STRATEGY) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* PROPOSALA DASHBOARD WORKSPACE SPLIT (INPUTS LEFT, ANALYSIS & DRAFT RIGHT) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start font-mono">
             
             {/* ========================================================= */}
-            {/* 1. LEFT PANEL (CONFIGURATION & INPUTS) - 5 Cols           */}
+            {/* LEFT COLUMN: FIELD INPUTS (5 COLS)                       */}
             {/* ========================================================= */}
-            <div className="lg:col-span-5 bg-[#18181B] border border-[#27272A] rounded-xl p-5 space-y-5 shadow-lg flex flex-col">
+            <div className="lg:col-span-5 space-y-4">
               
-              {/* Header */}
-              <div className="border-b border-[#27272A] pb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-emerald-400" />
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                    1. Configuration & Inputs
-                  </h2>
-                </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-[#27272A] text-gray-400 font-mono">
-                  Input Panel
-                </span>
-              </div>
-
-              {/* Profile & Department Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                
-                {/* Your Profile Dropdown */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-mono font-semibold uppercase tracking-wider text-gray-300 block">
-                    Your Profile
-                  </label>
-                  <select
-                    value={selectedProfile}
-                    onChange={(e) => {
-                      setSelectedProfile(e.target.value);
-                      addToast(`Switched profile to ${e.target.value}`, 'info');
-                    }}
-                    className="w-full bg-[#121214] border border-[#27272A] rounded-lg text-xs p-2.5 text-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-sans cursor-pointer"
-                  >
-                    <option value="Senior Fullstack Developer">Senior Fullstack Developer</option>
-                    <option value="3D Animator & Visualizer">3D Animator & Visualizer</option>
-                    <option value="UI/UX Product Architect">UI/UX Product Architect</option>
-                    <option value="Video Production Lead">Video Production Lead</option>
-                    <option value="AI Systems Specialist">AI Systems Specialist</option>
-                  </select>
-                </div>
-
-                {/* Department Dropdown */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-mono font-semibold uppercase tracking-wider text-gray-300 block">
-                    Department
-                  </label>
-                  <select
-                    value={selectedDept}
-                    onChange={(e) => {
-                      setSelectedDept(e.target.value);
-                      addToast(`Switched department to ${e.target.value}`, 'info');
-                    }}
-                    className="w-full bg-[#121214] border border-[#27272A] rounded-lg text-xs p-2.5 text-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-sans cursor-pointer"
-                  >
-                    <option value="Software Engineering">Software Engineering</option>
-                    <option value="Animation & Motion">Animation & Motion</option>
-                    <option value="Product Design">Product Design</option>
-                    <option value="AI & Machine Learning">AI & Machine Learning</option>
-                    <option value="Video & VFX">Video & VFX</option>
-                  </select>
-                </div>
-
-              </div>
-
-              {/* Job Posting Textarea & Preset Selector */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-mono font-semibold uppercase tracking-wider text-gray-300 block">
-                    Client Job Description
-                  </label>
-                  
-                  {/* Presets */}
-                  <div className="flex items-center gap-1">
-                    {SAMPLE_JOBS.slice(0, 3).map((sample, idx) => (
-                      <button
-                        key={sample.id}
-                        onClick={() => {
-                          setSelectedSampleId(sample.id);
-                          runAnalysis(sample.id);
-                        }}
-                        className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors cursor-pointer ${
-                          selectedSampleId === sample.id
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold'
-                            : 'bg-[#121214] text-gray-400 border border-[#27272A] hover:text-white'
-                        }`}
-                      >
-                        Preset #{idx + 1}
-                      </button>
-                    ))}
+              {/* FIELD 01: YOUR PROFILE */}
+              <div className="bg-[#0f141c] border border-[#1e293b] rounded-xl p-4 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500 font-bold">field . 01</span>
+                    <span className="text-white font-bold tracking-wider uppercase">YOUR PROFILE</span>
                   </div>
+                  <button
+                    onClick={openProfilesModal}
+                    className="text-[10px] text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>PICK A SAVED PROFILE -&gt;</span>
+                  </button>
+                </div>
+
+                <select
+                  value={selectedProfile}
+                  onChange={(e) => {
+                    setSelectedProfile(e.target.value);
+                    addToast(`Selected profile: ${e.target.value}`, 'info');
+                  }}
+                  className="w-full bg-[#161c28] border border-[#1e293b] rounded-lg text-xs p-2.5 text-gray-100 focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                >
+                  <option value="Hanif Khan">Hanif Khan — 3D Animator & Filmmaker | Product & Automotive</option>
+                  <option value="Abbas">Abbas — Bookkeeper & Accountant | Bank Reconciliation</option>
+                  <option value="Ambreen Ali">Ambreen Ali — Certified Bookkeeper & Accountant | QuickBooks</option>
+                  <option value="Muhammad Haneef">Muhammad Haneef — Real Estate Bookkeeper</option>
+                  <option value="Shehzad Baig">Shehzad Baig — E-commerce Bookkeeper | Amazon & Shopify</option>
+                  <option value="Sohail">Sohail — AI Accounting Automation Expert | QuickBooks</option>
+                  <option value="Arif Hussain">Arif Hussain — AI Automation | n8n | VAPI | RAG | AI Agents</option>
+                  <option value="Hakeem Sardar">Hakeem Sardar — AI Automation Expert | n8n | Make | Zapier</option>
+                </select>
+              </div>
+
+              {/* FIELD 02: DEPARTMENT */}
+              <div className="bg-[#0f141c] border border-[#1e293b] rounded-xl p-4 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500 font-bold">field . 02</span>
+                    <span className="text-white font-bold tracking-wider uppercase">DEPARTMENT</span>
+                  </div>
+                  <button
+                    onClick={() => addToast('Department manager open', 'info')}
+                    className="text-[10px] text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>MANAGE -&gt;</span>
+                  </button>
+                </div>
+
+                <select
+                  value={selectedDept}
+                  onChange={(e) => {
+                    setSelectedDept(e.target.value);
+                    addToast(`Filter department: ${e.target.value}`, 'info');
+                  }}
+                  className="w-full bg-[#161c28] border border-[#1e293b] rounded-lg text-xs p-2.5 text-gray-100 focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                >
+                  <option value="All departments">All departments (no filter)</option>
+                  <option value="AI Automation">AI Automation</option>
+                  <option value="Graphic Design">Graphic Design</option>
+                  <option value="UI/UX">UI/UX</option>
+                  <option value="Video Editing">Video Editing</option>
+                  <option value="accounting">accounting</option>
+                  <option value="animation">animation</option>
+                  <option value="engineering">engineering</option>
+                  <option value="marketing">marketing</option>
+                </select>
+              </div>
+
+              {/* FIELD 03: JOB POSTING */}
+              <div className="bg-[#0f141c] border border-[#1e293b] rounded-xl p-4 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500 font-bold">field . 03</span>
+                    <span className="text-white font-bold tracking-wider uppercase">JOB POSTING</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const sample = SAMPLE_JOBS[0];
+                      setSelectedSampleId(sample.id);
+                      setJobInputText(sample.description);
+                      addToast('Loaded sample job posting', 'success');
+                    }}
+                    className="text-[10px] text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>LOAD SAMPLE -&gt;</span>
+                  </button>
                 </div>
 
                 <textarea
@@ -1172,322 +1232,281 @@ export const JobAnalyzerPage: React.FC = () => {
                     setJobInputText(e.target.value);
                     if (selectedSampleId !== 'custom') setSelectedSampleId('custom');
                   }}
-                  placeholder="Paste Upwork job link or client job description..."
-                  className="w-full bg-[#121214] border border-[#27272A] rounded-lg text-xs p-3 text-gray-100 placeholder-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-emerald-500 font-sans leading-relaxed resize-none transition-all"
+                  placeholder="Paste the full post - title, body, client stats, budget line..."
+                  className="w-full bg-[#161c28] border border-[#1e293b] rounded-lg text-xs p-3 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-emerald-500 font-sans leading-relaxed resize-none"
                 />
-              </div>
-
-              {/* Settings Toggles (English Level, Proposal Length, AI Model) */}
-              <div className="p-3.5 bg-[#121214] border border-[#27272A] rounded-xl space-y-3">
                 
-                <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                  <SlidersHorizontal className="w-3.5 h-3.5" />
-                  <span>AI Prompt Generation Settings</span>
+                <div className="text-[10px] text-gray-500 font-mono">
+                  {jobInputText.length} chars
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  
-                  {/* English Level */}
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-mono text-gray-400 block">English Level:</span>
-                    <select
-                      value={englishLevel}
-                      onChange={(e) => setEnglishLevel(e.target.value as any)}
-                      className="w-full bg-[#18181B] border border-[#27272A] rounded text-xs p-1.5 text-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                    >
-                      <option value="Basic/ESL">Basic / ESL</option>
-                      <option value="Conversational">Conversational</option>
-                      <option value="Native/Fluent">Native / Fluent</option>
-                    </select>
-                  </div>
-
-                  {/* AI Model */}
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-mono text-gray-400 block">AI Model Engine:</span>
-                    <select
-                      value={aiModel}
-                      onChange={(e) => {
-                        setAiModel(e.target.value);
-                        addToast(`Model engine set to ${e.target.value}`, 'info');
-                      }}
-                      className="w-full bg-[#18181B] border border-[#27272A] rounded text-xs p-1.5 text-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                    >
-                      <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
-                      <option value="GPT-4o">GPT-4o</option>
-                      <option value="Gemini 1.5 Pro">Gemini 1.5 Pro</option>
-                    </select>
-                  </div>
-
-                </div>
-
-                {/* Proposal Length Segmented Toggle */}
-                <div className="space-y-1">
-                  <span className="text-[10px] font-mono text-gray-400 block">Proposal Length:</span>
-                  <div className="grid grid-cols-3 gap-1 bg-[#18181B] p-1 rounded-lg border border-[#27272A]">
-                    {(['Short', 'Medium', 'Detailed'] as const).map((len) => (
-                      <button
-                        key={len}
-                        onClick={() => {
-                          setProposalLength(len);
-                          addToast(`Set proposal length to ${len}`, 'info');
-                        }}
-                        className={`py-1 rounded text-xs font-mono font-medium transition-all cursor-pointer ${
-                          proposalLength === len
-                            ? 'bg-emerald-600 text-white font-bold shadow-xs'
-                            : 'text-gray-400 hover:text-gray-200'
-                        }`}
-                      >
-                        {len}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
               </div>
 
-              {/* Action Button: Extract Score */}
-              <div className="pt-2">
-                <button
-                  onClick={() => runAnalysis()}
-                  disabled={isAnalyzing}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 px-4 rounded-xl text-xs font-bold font-mono tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all cursor-pointer disabled:opacity-50"
+              {/* FIELD 04: ENGLISH LEVEL */}
+              <div className="bg-[#0f141c] border border-[#1e293b] rounded-xl p-4 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500 font-bold">field . 04</span>
+                    <span className="text-white font-bold tracking-wider uppercase">ENGLISH LEVEL</span>
+                  </div>
+                  <span className="text-[10px] text-gray-500">applies to every generated candidate</span>
+                </div>
+
+                <select
+                  value={englishLevel}
+                  onChange={(e) => setEnglishLevel(e.target.value as any)}
+                  className="w-full bg-[#161c28] border border-[#1e293b] rounded-lg text-xs p-2.5 text-gray-100 focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
                 >
-                  {isAnalyzing ? (
+                  <option value="Basic (ESL, short sentences)">Basic (ESL, short sentences)</option>
+                  <option value="Average (competent non-native)">Average (competent non-native)</option>
+                  <option value="Professional (editorial-grade)">Professional (editorial-grade)</option>
+                  <option value="Polished (expert native)">Polished (expert native)</option>
+                </select>
+
+                <p className="text-[10px] text-emerald-400 font-mono leading-tight pt-1">
+                  PLEASE PICK BASIC. Clients can guess AI from too polished English. Simple English sounds like real person. Basic level will give you more replies.
+                </p>
+              </div>
+
+              {/* FIELD 05: PROPOSAL LENGTH */}
+              <div className="bg-[#0f141c] border border-[#1e293b] rounded-xl p-4 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500 font-bold">field . 05</span>
+                    <span className="text-white font-bold tracking-wider uppercase">PROPOSAL LENGTH</span>
+                  </div>
+                  <span className="text-[10px] text-gray-500">Medium - max after scoring</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'SHORT', label: 'SHORT', sub: 'Fast, direct, no padding' },
+                    { id: 'MEDIUM', label: 'MEDIUM', sub: 'Reply-focused default' },
+                    { id: 'DETAILED', label: 'DETAILED', sub: 'Full proof and nuance' },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => setProposalLength(item.id as any)}
+                      className={`p-2 rounded-lg border text-left cursor-pointer transition-all ${
+                        proposalLength === item.id
+                          ? 'bg-emerald-950/40 border-emerald-500 text-emerald-300'
+                          : 'bg-[#161c28] border-[#1e293b] text-gray-400 hover:border-gray-600'
+                      }`}
+                    >
+                      <div className="text-xs font-bold font-mono">{item.label}</div>
+                      <div className="text-[9px] opacity-75 leading-tight mt-0.5">{item.sub}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* FIELD 06: MODEL */}
+              <div className="bg-[#0f141c] border border-[#1e293b] rounded-xl p-4 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500 font-bold">field . 06</span>
+                    <span className="text-white font-bold tracking-wider uppercase">MODEL</span>
+                  </div>
+                  <span className="text-[10px] text-gray-500">DEFAULTS -&gt;</span>
+                </div>
+
+                <select
+                  value={aiModel}
+                  onChange={(e) => setAiModel(e.target.value)}
+                  className="w-full bg-[#161c28] border border-[#1e293b] rounded-lg text-xs p-2.5 text-gray-100 focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                >
+                  <option value="Claude Sonnet 4.6">Claude Sonnet 4.6</option>
+                  <option value="Gemini 2.5 Flash">Gemini 2.5 Flash</option>
+                  <option value="GPT-4o">GPT-4o</option>
+                </select>
+
+                <p className="text-[10px] text-gray-500">
+                  Used for extraction, generation, rewrites, and application answers on this run.
+                </p>
+              </div>
+
+              {/* ACTION BUTTON: EXTRACT & SCORE */}
+              <button
+                onClick={() => runAnalysis()}
+                disabled={isAnalyzing}
+                className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3.5 px-4 rounded-xl text-sm font-black tracking-wider uppercase flex items-center justify-center gap-2 shadow-xl cursor-pointer disabled:opacity-50 transition-all"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                    <span>Analyzing & Scoring Fit...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="bg-black/20 text-black text-[10px] px-1.5 py-0.5 rounded font-bold">RUN</span>
+                    <span>Extract & score</span>
+                  </>
+                )}
+              </button>
+
+            </div>
+
+            {/* ========================================================= */}
+            {/* RIGHT COLUMN: FIT EVALUATION, PROOFS & DRAFT (7 COLS)    */}
+            {/* ========================================================= */}
+            <div className="lg:col-span-7 space-y-4">
+              
+              {/* FIT SCORE BADGE CARD */}
+              <div className="bg-[#0f141c] border border-[#1e293b] rounded-xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-400 font-bold uppercase">FIT</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-extrabold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded">
+                      Good 82.3 / 100
+                    </span>
+                    <span className="text-[11px] text-gray-400">Full 40-minute process.</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowScoreModal(true)}
+                  className="text-xs text-emerald-400 hover:underline flex items-center gap-1 font-bold cursor-pointer"
+                >
+                  <span>REASONING -&gt;</span>
+                </button>
+              </div>
+
+              {/* PROOF TO USE SECTION */}
+              <div className="bg-[#0f141c] border border-[#1e293b] rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <div>
+                    <span className="text-white font-bold tracking-wider uppercase">Proof to use</span>
+                    <span className="text-gray-500 ml-2">5/5 selected</span>
+                  </div>
+                  <button
+                    onClick={() => setShowCaseStudyDrawer(true)}
+                    className="text-[10px] text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    <span>In. Browse Library -&gt;</span>
+                  </button>
+                </div>
+
+                <p className="text-[11px] text-gray-400">
+                  Retrieval proof is selected by default. Swap it before generation when another use case fits better.
+                </p>
+
+                {/* Case Study Cards */}
+                <div className="space-y-2">
+                  {portfolioProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="bg-[#161c28] border border-[#1e293b] rounded-lg p-3 flex items-start justify-between gap-3 text-xs"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[9px] font-bold uppercase">
+                            CASE STUDY
+                          </span>
+                          <span className="text-white font-semibold">{project.title}</span>
+                        </div>
+                        <p className="text-[11px] text-gray-400 leading-snug">{project.summary}</p>
+                      </div>
+
+                      <button
+                        onClick={() => handleRemoveProof(project.id)}
+                        className="text-gray-500 hover:text-red-400 p-1 cursor-pointer shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* SHAPES TO USE SECTION */}
+              <div className="bg-[#0f141c] border border-[#1e293b] rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <div>
+                    <span className="text-white font-bold tracking-wider uppercase">Shapes to use</span>
+                    <span className="text-gray-500 ml-2">1 variant</span>
+                  </div>
+                  <span className="text-[10px] text-gray-500">TONE: NEUTRAL ORDER: STANDARD</span>
+                </div>
+
+                <p className="text-[11px] text-gray-400">
+                  These planned structures will guide the draft variants.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  {/* OPENER */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-gray-400 block uppercase font-bold">OPENER</span>
+                    <select
+                      value={openerShape}
+                      onChange={(e) => setOpenerShape(e.target.value)}
+                      className="w-full bg-[#161c28] border border-[#1e293b] rounded p-2 text-gray-200 text-xs focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                    >
+                      <option value="Dubai scene to mirror pivot">Dubai scene to mirror pivot - Story opener</option>
+                      <option value="Blunt claim, no preamble">Blunt claim, no preamble - Direct opener</option>
+                      <option value="Clarifer before pitch">Clarifer before pitch - Question opener</option>
+                      <option value="Hard credential open">Hard credential open - Credential opener</option>
+                    </select>
+                  </div>
+
+                  {/* MIDDLE */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-gray-400 block uppercase font-bold">MIDDLE</span>
+                    <select
+                      value={middleShape}
+                      onChange={(e) => setMiddleShape(e.target.value)}
+                      className="w-full bg-[#161c28] border border-[#1e293b] rounded p-2 text-gray-200 text-xs focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                    >
+                      <option value="Week-by-week SOW">Week-by-week SOW - Phased SOW</option>
+                      <option value="Do this first">Do this first - First milestone</option>
+                      <option value="Flag risk upfront">Flag risk upfront - Risk acknowledgment</option>
+                      <option value="Loom walkthrough offer">Loom walkthrough offer</option>
+                    </select>
+                  </div>
+
+                  {/* CLOSE */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-gray-400 block uppercase font-bold">CLOSE</span>
+                    <select
+                      value={closeShape}
+                      onChange={(e) => setCloseShape(e.target.value)}
+                      className="w-full bg-[#161c28] border border-[#1e293b] rounded p-2 text-gray-200 text-xs focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                    >
+                      <option value="Phased-pricing tease">Phased-pricing tease - Phased-pricing tease close</option>
+                      <option value="Direct booking ask">Direct booking ask - Direct ask close</option>
+                      <option value="Soft clarifying close">Soft clarifying close - Question close</option>
+                      <option value="Urgent but not pushy">Urgent but not pushy - Availability close</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* GENERATE DRAFT BUTTON */}
+                <button
+                  onClick={handleGenerateDraft}
+                  disabled={isGeneratingDraft}
+                  className="w-full bg-white hover:bg-gray-100 text-black py-3 px-4 rounded-xl text-xs font-black tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50 transition-all mt-2"
+                >
+                  {isGeneratingDraft ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                      <span>Processing Job Fit & Scoring...</span>
+                      <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                      <span>Synthesizing Draft...</span>
                     </>
                   ) : (
                     <>
-                      <Zap className="w-4 h-4 text-emerald-200" />
-                      <span>Extract Score & Analyze Fit</span>
+                      <Zap className="w-4 h-4 text-black fill-black" />
+                      <span>Generate draft</span>
                     </>
                   )}
                 </button>
               </div>
-
             </div>
-
-            {/* ========================================================= */}
-            {/* 2. RIGHT PANEL (STRATEGY & OUTPUT) - 7 Cols               */}
-            {/* ========================================================= */}
-            <div className="lg:col-span-7 space-y-5">
-              
-              {/* FIT SCORE HEADER CARD */}
-              <div className="bg-[#18181B] border border-[#27272A] rounded-xl p-5 shadow-lg space-y-3 relative overflow-hidden">
-                
-                <div className="flex items-center justify-between border-b border-[#27272A] pb-3">
-                  <div>
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">
-                      Card Fit Evaluation
-                    </span>
-                    <h3 className="text-base font-bold text-white flex items-center gap-2 mt-0.5">
-                      <BarChart3 className="w-4 h-4 text-emerald-400" />
-                      <span>Fit Score & Match Index</span>
-                    </h3>
-                  </div>
-
-                  {/* Visual Score Pill Badge */}
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <span className="text-[10px] text-gray-400 font-mono block">Match Rating</span>
-                      <span className={`text-xl font-black font-mono ${
-                        (analysisResult?.score || 94) >= 80 ? 'text-emerald-400' : 'text-amber-400'
-                      }`}>
-                        {(analysisResult?.score || 94) >= 80 ? 'Good ' : 'Moderate '}
-                        {analysisResult?.score || 94}.0 / 100
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={() => setShowScoreModal(true)}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-xs font-mono font-bold hover:bg-emerald-900 transition-colors flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>Breakdown</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="text-xs text-gray-300 leading-relaxed font-medium">
-                  {analysisResult?.summary || 'Client profile matched with your past work. High budget confidence with verified 5-star client hire rate.'}
-                </div>
-
-              </div>
-
-              {/* PROOF TO USE (CASE STUDIES LIST) */}
-              <div className="bg-[#18181B] border border-[#27272A] rounded-xl p-5 space-y-3 shadow-lg">
-                
-                <div className="flex items-center justify-between border-b border-[#27272A] pb-2.5">
-                  <div className="flex items-center gap-2">
-                    <FolderGit2 className="w-4 h-4 text-emerald-400" />
-                    <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                      Proof to Use ({activeProofIds.length} Case Studies Active)
-                    </h3>
-                  </div>
-
-                  <button
-                    onClick={() => setShowCaseStudyDrawer(true)}
-                    className="px-2.5 py-1 rounded bg-[#121214] border border-[#27272A] hover:border-gray-600 text-[11px] font-mono text-emerald-400 flex items-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="w-3 h-3" />
-                    <span>+ Add Proof</span>
-                  </button>
-                </div>
-
-                {/* Proof Cards Grid */}
-                <div className="space-y-2">
-                  {portfolioProjects
-                    .filter((p) => activeProofIds.includes(p.id))
-                    .map((project) => (
-                      <div
-                        key={project.id}
-                        className="bg-[#121214] border border-[#27272A] rounded-lg p-3 flex items-start justify-between gap-3 hover:border-gray-700 transition-all group"
-                      >
-                        <div className="space-y-1 flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-white truncate">{project.title}</span>
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono">
-                              {project.clientIndustry}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-gray-400 line-clamp-1">{project.summary}</p>
-                          <div className="text-[10px] font-mono text-emerald-400">
-                            Verified Metric: <strong>{project.metrics}</strong>
-                          </div>
-                        </div>
-
-                        {/* Remove 'X' Button to exclude from prompt context */}
-                        <button
-                          onClick={() => handleRemoveProof(project.id)}
-                          className="p-1 text-gray-500 hover:text-red-400 hover:bg-[#27272A] rounded transition-colors cursor-pointer shrink-0"
-                          title="Remove from proposal prompt context"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-
-                  {activeProofIds.length === 0 && (
-                    <div className="p-4 text-center rounded bg-[#121214] border border-dashed border-[#27272A] text-xs text-gray-400">
-                      No proof case studies active. Click "+ Add Proof" above to select past work.
-                    </div>
-                  )}
-                </div>
-
-              </div>
-
-              {/* SHAPES TO USE (PROPOSAL STRUCTURE STRATEGY) */}
-              <div className="bg-[#18181B] border border-[#27272A] rounded-xl p-5 space-y-4 shadow-lg">
-                
-                <div className="border-b border-[#27272A] pb-2.5 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Layers3 className="w-4 h-4 text-emerald-400" />
-                    <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                      Shapes to Use (Proposal Structure)
-                    </h3>
-                  </div>
-                  <span className="text-[10px] font-mono text-gray-400">Strategic Flow</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  
-                  {/* Opener Shape */}
-                  <div className="space-y-1 bg-[#121214] p-3 rounded-lg border border-[#27272A]">
-                    <label className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider block">
-                      1. Opener Hook
-                    </label>
-                    <select
-                      value={openerShape}
-                      onChange={(e) => {
-                        setOpenerShape(e.target.value);
-                        addToast(`Opener set to "${e.target.value}"`, 'info');
-                      }}
-                      className="w-full bg-[#18181B] border border-[#27272A] text-xs text-gray-200 rounded p-1.5 font-sans focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                    >
-                      <option value="Direct Pain-Point Hook">Direct Pain-Point Hook</option>
-                      <option value="Story Opener">Story Opener</option>
-                      <option value="Technical Solution Lead">Technical Solution Lead</option>
-                      <option value="Empathy & Mirror">Empathy & Mirror</option>
-                    </select>
-                  </div>
-
-                  {/* Middle Shape */}
-                  <div className="space-y-1 bg-[#121214] p-3 rounded-lg border border-[#27272A]">
-                    <label className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider block">
-                      2. Middle Body
-                    </label>
-                    <select
-                      value={middleShape}
-                      onChange={(e) => {
-                        setMiddleShape(e.target.value);
-                        addToast(`Middle structure set to "${e.target.value}"`, 'info');
-                      }}
-                      className="w-full bg-[#18181B] border border-[#27272A] text-xs text-gray-200 rounded p-1.5 font-sans focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                    >
-                      <option value="Week-by-Week SOW">Week-by-Week SOW</option>
-                      <option value="Problem Mirror & SOW">Problem Mirror & SOW</option>
-                      <option value="Metrics & Case Study Proof">Metrics & Case Study Proof</option>
-                      <option value="Architecture Breakdown">Architecture Breakdown</option>
-                    </select>
-                  </div>
-
-                  {/* Close Shape */}
-                  <div className="space-y-1 bg-[#121214] p-3 rounded-lg border border-[#27272A]">
-                    <label className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider block">
-                      3. Close Action
-                    </label>
-                    <select
-                      value={closeShape}
-                      onChange={(e) => {
-                        setCloseShape(e.target.value);
-                        addToast(`Close call-to-action set to "${e.target.value}"`, 'info');
-                      }}
-                      className="w-full bg-[#18181B] border border-[#27272A] text-xs text-gray-200 rounded p-1.5 font-sans focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                    >
-                      <option value="Soft Question Close">Soft Question Close</option>
-                      <option value="Phased-Pricing Tease">Phased-Pricing Tease</option>
-                      <option value="Calendar Booking Call">Calendar Booking Call</option>
-                      <option value="Immediate Start Guarantee">Immediate Start Guarantee</option>
-                    </select>
-                  </div>
-
-                </div>
-
-                {/* GENERATE DRAFT ACTION BUTTON */}
-                <div className="pt-2">
-                  <button
-                    onClick={handleGenerateDraft}
-                    disabled={isGeneratingDraft}
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 px-4 rounded-xl text-xs font-bold font-mono tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {isGeneratingDraft ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                        <span>Synthesizing Draft with {aiModel}...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 text-emerald-200" />
-                        <span>Generate Draft Proposal</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-              </div>
-
-            </div>
-
           </div>
 
           {/* ========================================================= */}
           {/* 3. DRAFT EDITOR (FINAL STATE OUTPUT PANEL)                */}
           {/* ========================================================= */}
-          <section className="bg-[#18181B] border border-[#27272A] rounded-xl p-5 space-y-4 shadow-lg">
+          <section className="bg-[#0e1626] border border-[#1e293b] rounded-xl p-5 sm:p-6 space-y-4 shadow-xl">
             
             {/* Header, Draft Tabs, and Actions Bar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-[#27272A]">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-[#1e293b]">
               
               <div>
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
@@ -1500,14 +1519,14 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
 
               {/* Draft Style Tab Switcher */}
-              <div className="flex items-center gap-1 bg-[#121214] p-1 rounded-lg border border-[#27272A]">
+              <div className="flex items-center gap-1 bg-[#0c1322] p-1 rounded-lg border border-[#1e293b]">
                 {(['Direct & Short', 'Value Focused', 'Detailed'] as const).map((style) => (
                   <button
                     key={style}
                     onClick={() => handleTabChange(style)}
                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
                       draftStyle === style
-                        ? 'bg-[#27272A] text-white font-semibold shadow-xs'
+                        ? 'bg-[#1e293b] text-white font-semibold shadow-xs'
                         : 'text-gray-400 hover:text-gray-200'
                     }`}
                   >
@@ -1523,7 +1542,7 @@ export const JobAnalyzerPage: React.FC = () => {
                 <select
                   value={proposalStatus}
                   onChange={(e) => handleStatusChange(e.target.value as any)}
-                  className="bg-[#121214] border border-[#27272A] text-xs text-gray-200 rounded-lg px-2.5 py-2 font-mono font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                  className="bg-[#0c1322] border border-[#1e293b] text-xs text-gray-200 rounded-lg px-2.5 py-2 font-mono font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
                 >
                   <option value="Draft">Status: Draft</option>
                   <option value="Sent">Status: Sent</option>
@@ -1555,7 +1574,7 @@ export const JobAnalyzerPage: React.FC = () => {
             </div>
 
             {/* Inline AI Quick Actions Bar */}
-            <div className="bg-[#121214] p-2 rounded-lg border border-[#27272A] flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="bg-[#0c1322] p-2 rounded-lg border border-[#1e293b] flex flex-wrap items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-1.5 text-gray-400 font-mono text-[11px] font-semibold">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
                 <span>AI QUICK REFINE:</span>
@@ -1565,7 +1584,7 @@ export const JobAnalyzerPage: React.FC = () => {
                 <button
                   onClick={() => handleAIRefine('shorter')}
                   disabled={isRefiningAI}
-                  className="px-2.5 py-1 rounded bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-gray-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  className="px-2.5 py-1 rounded bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] text-gray-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 >
                   <Zap className="w-3 h-3 text-amber-400" />
                   <span>Make Shorter</span>
@@ -1574,7 +1593,7 @@ export const JobAnalyzerPage: React.FC = () => {
                 <button
                   onClick={() => handleAIRefine('professional')}
                   disabled={isRefiningAI}
-                  className="px-2.5 py-1 rounded bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-gray-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  className="px-2.5 py-1 rounded bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] text-gray-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 >
                   <ShieldCheck className="w-3 h-3 text-blue-400" />
                   <span>More Professional</span>
@@ -1583,16 +1602,16 @@ export const JobAnalyzerPage: React.FC = () => {
                 <button
                   onClick={() => handleAIRefine('pastwork')}
                   disabled={isRefiningAI}
-                  className="px-2.5 py-1 rounded bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-gray-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  className="px-2.5 py-1 rounded bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] text-gray-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 >
-                  <FolderGit2 className="w-3 h-3 text-emerald-400" />
+                  <FolderGit2 className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Emphasize Past Work</span>
                 </button>
 
                 <button
                   onClick={() => handleAIRefine('question')}
                   disabled={isRefiningAI}
-                  className="px-2.5 py-1 rounded bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-gray-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  className="px-2.5 py-1 rounded bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] text-gray-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 >
                   <HelpCircle className="w-3 h-3 text-purple-400" />
                   <span>Add Closing Question</span>
@@ -1603,7 +1622,7 @@ export const JobAnalyzerPage: React.FC = () => {
             {/* Minimalist Rich Editor */}
             <div className="space-y-2 relative">
               {isRefiningAI && (
-                <div className="absolute inset-0 bg-[#121214]/70 backdrop-blur-xs rounded-lg z-10 flex items-center justify-center gap-2 text-emerald-400 font-mono text-xs">
+                <div className="absolute inset-0 bg-[#0c1322]/70 backdrop-blur-xs rounded-lg z-10 flex items-center justify-center gap-2 text-emerald-400 font-mono text-xs">
                   <RefreshCw className="w-4 h-4 animate-spin" />
                   <span>Refining draft tone with Gemini...</span>
                 </div>
@@ -1620,7 +1639,7 @@ export const JobAnalyzerPage: React.FC = () => {
                 rows={10}
                 value={editedProposalText}
                 onChange={(e) => setEditedProposalText(e.target.value)}
-                className="w-full bg-[#121214] border border-[#27272A] rounded-lg text-xs sm:text-sm p-4 text-gray-100 placeholder-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-emerald-500 font-sans leading-relaxed transition-all resize-none shadow-inner"
+                className="w-full bg-[#0c1322] border border-[#1e293b] rounded-lg text-xs sm:text-sm p-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-sans leading-relaxed transition-all resize-none shadow-inner"
               />
             </div>
 
@@ -1647,9 +1666,9 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {showScoreModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl bg-[#121214] border border-[#27272A] rounded-2xl p-6 space-y-6 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-2xl bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6 space-y-6 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             
-            <div className="flex items-center justify-between border-b border-[#27272A] pb-4">
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-4">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-emerald-400" />
@@ -1689,7 +1708,7 @@ export const JobAnalyzerPage: React.FC = () => {
             <div className="space-y-3 text-xs">
               
               {/* 1. Budget Fit */}
-              <div className="p-3.5 rounded-xl bg-[#18181B] border border-[#27272A] space-y-2">
+              <div className="p-3.5 rounded-xl bg-[#111827] border border-[#1e293b] space-y-2">
                 <div className="flex items-center justify-between font-semibold text-white">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400" />
@@ -1703,7 +1722,7 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
 
               {/* 2. Skill Match */}
-              <div className="p-3.5 rounded-xl bg-[#18181B] border border-[#27272A] space-y-2">
+              <div className="p-3.5 rounded-xl bg-[#111827] border border-[#1e293b] space-y-2">
                 <div className="flex items-center justify-between font-semibold text-white">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-blue-400" />
@@ -1717,7 +1736,7 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
 
               {/* 3. Client History */}
-              <div className="p-3.5 rounded-xl bg-[#18181B] border border-[#27272A] space-y-2">
+              <div className="p-3.5 rounded-xl bg-[#111827] border border-[#1e293b] space-y-2">
                 <div className="flex items-center justify-between font-semibold text-white">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-purple-400" />
@@ -1731,7 +1750,7 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
 
               {/* 4. Competition Density */}
-              <div className="p-3.5 rounded-xl bg-[#18181B] border border-[#27272A] space-y-2">
+              <div className="p-3.5 rounded-xl bg-[#111827] border border-[#1e293b] space-y-2">
                 <div className="flex items-center justify-between font-semibold text-white">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-amber-400" />
@@ -1745,7 +1764,7 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
 
               {/* 5. Risk Audit */}
-              <div className="p-3.5 rounded-xl bg-[#18181B] border border-[#27272A] space-y-2">
+              <div className="p-3.5 rounded-xl bg-[#111827] border border-[#1e293b] space-y-2">
                 <div className="flex items-center justify-between font-semibold text-white">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400" />
@@ -1778,10 +1797,10 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {showCaseStudyDrawer && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex justify-end">
-          <div className="w-full max-w-md bg-[#121214] border-l border-[#27272A] h-full p-6 flex flex-col justify-between space-y-4 animate-in slide-in-from-right duration-200 overflow-y-auto">
+          <div className="w-full max-w-md bg-[#0f172a] border-l border-[#1e293b] h-full p-6 flex flex-col justify-between space-y-4 animate-in slide-in-from-right duration-200 overflow-y-auto">
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#27272A]">
+              <div className="flex items-center justify-between pb-3 border-b border-[#1e293b]">
                 <div>
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <FolderGit2 className="w-4 h-4 text-emerald-400" />
@@ -1804,7 +1823,7 @@ export const JobAnalyzerPage: React.FC = () => {
                   value={caseStudySearch}
                   onChange={(e) => setCaseStudySearch(e.target.value)}
                   placeholder="Filter case studies by tech or industry..."
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-lg text-xs pl-9 pr-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-[#111827] border border-[#1e293b] rounded-lg text-xs pl-9 pr-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
@@ -1819,7 +1838,7 @@ export const JobAnalyzerPage: React.FC = () => {
                       className={`p-4 rounded-xl border text-xs space-y-2 cursor-pointer transition-all ${
                         selectedPortfolioId === project.id
                           ? 'bg-emerald-950/40 border-emerald-500/60 ring-1 ring-emerald-500/40'
-                          : 'bg-[#18181B] border-[#27272A] hover:border-gray-600'
+                          : 'bg-[#111827] border-[#1e293b] hover:border-gray-600'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -1837,7 +1856,7 @@ export const JobAnalyzerPage: React.FC = () => {
 
                       <div className="flex flex-wrap gap-1 pt-1">
                         {project.techStack.slice(0, 4).map((tech, i) => (
-                          <span key={i} className="px-1.5 py-0.5 rounded bg-[#27272A] text-gray-300 text-[10px] font-mono">
+                          <span key={i} className="px-1.5 py-0.5 rounded bg-[#1e293b] text-gray-300 text-[10px] font-mono">
                             {tech}
                           </span>
                         ))}
@@ -1851,7 +1870,7 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-[#27272A]">
+            <div className="pt-4 border-t border-[#1e293b]">
               <button
                 onClick={() => setShowNewPortfolioModal(true)}
                 className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
@@ -1870,11 +1889,11 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {showHistoryModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex justify-end">
-          <div className="w-full max-w-2xl bg-[#121214] border-l border-[#27272A] h-full p-6 flex flex-col justify-between space-y-4 animate-in slide-in-from-right duration-200 overflow-y-auto">
+          <div className="w-full max-w-2xl bg-[#0f172a] border-l border-[#1e293b] h-full p-6 flex flex-col justify-between space-y-4 animate-in slide-in-from-right duration-200 overflow-y-auto">
             
             <div className="space-y-4">
               
-              <div className="flex items-center justify-between pb-3 border-b border-[#27272A]">
+              <div className="flex items-center justify-between pb-3 border-b border-[#1e293b]">
                 <div>
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <History className="w-4 h-4 text-emerald-400" />
@@ -1900,12 +1919,12 @@ export const JobAnalyzerPage: React.FC = () => {
                     value={historySearchQuery}
                     onChange={(e) => setHistorySearchQuery(e.target.value)}
                     placeholder="Search by job title or client name..."
-                    className="w-full bg-[#18181B] border border-[#27272A] rounded-lg text-xs pl-9 pr-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full bg-[#111827] border border-[#1e293b] rounded-lg text-xs pl-9 pr-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
 
                 {/* Filter Tab Switcher */}
-                <div className="flex items-center gap-1 bg-[#18181B] p-1 rounded-lg border border-[#27272A] shrink-0 w-full sm:w-auto">
+                <div className="flex items-center gap-1 bg-[#111827] p-1 rounded-lg border border-[#1e293b] shrink-0 w-full sm:w-auto">
                   {(['All', 'In Progress', 'Won', 'Archived'] as const).map((tab) => (
                     <button
                       key={tab}
@@ -1933,7 +1952,7 @@ export const JobAnalyzerPage: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleExportJSON}
-                      className="px-2.5 py-1 rounded bg-[#121214] hover:bg-[#18181B] border border-[#27272A] text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1 rounded bg-[#0c1322] hover:bg-[#111827] border border-[#1e293b] text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
                     >
                       <Download className="w-3 h-3 text-emerald-400" />
                       <span>JSON</span>
@@ -1941,7 +1960,7 @@ export const JobAnalyzerPage: React.FC = () => {
 
                     <button
                       onClick={handleExportCSV}
-                      className="px-2.5 py-1 rounded bg-[#121214] hover:bg-[#18181B] border border-[#27272A] text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1 rounded bg-[#0c1322] hover:bg-[#111827] border border-[#1e293b] text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
                     >
                       <FileSpreadsheet className="w-3 h-3 text-blue-400" />
                       <span>CSV</span>
@@ -1959,16 +1978,16 @@ export const JobAnalyzerPage: React.FC = () => {
               )}
 
               {/* Proposals History Table */}
-              <div className="border border-[#27272A] rounded-xl overflow-hidden bg-[#18181B]">
+              <div className="border border-[#1e293b] rounded-xl overflow-hidden bg-[#111827]">
                 <table className="w-full text-left text-xs text-gray-300">
-                  <thead className="bg-[#121214] text-gray-400 uppercase font-mono text-[10px] border-b border-[#27272A]">
+                  <thead className="bg-[#0c1322] text-gray-400 uppercase font-mono text-[10px] border-b border-[#1e293b]">
                     <tr>
                       <th className="p-3 w-8">
                         <input
                           type="checkbox"
                           checked={selectedHistoryIds.length === filteredHistory.length && filteredHistory.length > 0}
                           onChange={handleSelectAllHistory}
-                          className="rounded border-gray-700 text-emerald-500 focus:ring-emerald-500 bg-[#18181B]"
+                          className="rounded border-gray-700 text-emerald-500 focus:ring-emerald-500 bg-[#111827]"
                         />
                       </th>
                       <th className="p-3">Job Title & Client</th>
@@ -1977,7 +1996,7 @@ export const JobAnalyzerPage: React.FC = () => {
                       <th className="p-3">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#27272A]">
+                  <tbody className="divide-y divide-[#1e293b]">
                     {filteredHistory.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="p-6 text-center text-gray-500 text-xs">
@@ -1988,14 +2007,14 @@ export const JobAnalyzerPage: React.FC = () => {
                       filteredHistory.map((item) => (
                         <tr 
                           key={item.id}
-                          className="hover:bg-[#27272A]/40 transition-colors group cursor-pointer"
+                          className="hover:bg-[#1e293b]/40 transition-colors group cursor-pointer"
                         >
                           <td className="p-3">
                             <input
                               type="checkbox"
                               checked={selectedHistoryIds.includes(item.id)}
                               onChange={() => handleToggleHistorySelect(item.id)}
-                              className="rounded border-gray-700 text-emerald-500 focus:ring-emerald-500 bg-[#18181B]"
+                              className="rounded border-gray-700 text-emerald-500 focus:ring-emerald-500 bg-[#111827]"
                             />
                           </td>
                           <td 
@@ -2021,7 +2040,7 @@ export const JobAnalyzerPage: React.FC = () => {
                               item.status === 'Won' ? 'bg-purple-950 text-purple-300 border border-purple-800/40' :
                               item.status === 'Replied' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/40' :
                               item.status === 'Sent' ? 'bg-blue-950 text-blue-300 border border-blue-800/40' :
-                              'bg-[#27272A] text-gray-300'
+                              'bg-[#1e293b] text-gray-300'
                             }`}>
                               {item.status}
                             </span>
@@ -2037,7 +2056,7 @@ export const JobAnalyzerPage: React.FC = () => {
 
             <button
               onClick={() => setShowHistoryModal(false)}
-              className="w-full py-2.5 rounded-xl bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-white text-xs font-semibold"
+              className="w-full py-2.5 rounded-xl bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] text-white text-xs font-semibold"
             >
               Close Proposals History
             </button>
@@ -2050,9 +2069,9 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {showNewPortfolioModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-[#121214] border border-[#27272A] rounded-2xl p-6 space-y-5 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-lg bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6 space-y-5 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             
-            <div className="flex items-center justify-between border-b border-[#27272A] pb-3">
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <FolderGit2 className="w-4 h-4 text-emerald-400" />
                 <span>Add Portfolio Case Study</span>
@@ -2077,7 +2096,7 @@ export const JobAnalyzerPage: React.FC = () => {
                   placeholder="e.g. Enterprise Stripe Payment & Billing Overhaul"
                   value={newProjectForm.title}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, title: e.target.value })}
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-[#111827] border border-[#1e293b] rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
@@ -2089,7 +2108,7 @@ export const JobAnalyzerPage: React.FC = () => {
                     placeholder="e.g. SaaS / FinTech"
                     value={newProjectForm.clientIndustry}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, clientIndustry: e.target.value })}
-                    className="w-full bg-[#18181B] border border-[#27272A] rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full bg-[#111827] border border-[#1e293b] rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
                 <div>
@@ -2100,7 +2119,7 @@ export const JobAnalyzerPage: React.FC = () => {
                     placeholder="React, TypeScript, Node, Stripe"
                     value={newProjectForm.techStackStr}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, techStackStr: e.target.value })}
-                    className="w-full bg-[#18181B] border border-[#27272A] rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full bg-[#111827] border border-[#1e293b] rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
               </div>
@@ -2113,7 +2132,7 @@ export const JobAnalyzerPage: React.FC = () => {
                   placeholder="Briefly describe what problem you solved for the client..."
                   value={newProjectForm.summary}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, summary: e.target.value })}
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"
+                  className="w-full bg-[#111827] border border-[#1e293b] rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"
                 />
               </div>
 
@@ -2124,7 +2143,7 @@ export const JobAnalyzerPage: React.FC = () => {
                   placeholder="e.g. -74% load latency, +32% conversion boost"
                   value={newProjectForm.metrics}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, metrics: e.target.value })}
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-[#111827] border border-[#1e293b] rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
@@ -2132,11 +2151,10 @@ export const JobAnalyzerPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowNewPortfolioModal(false)}
-                  className="px-4 py-2.5 rounded-lg bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-gray-300 font-semibold"
+                  className="px-4 py-2.5 rounded-lg bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] text-gray-300 font-semibold"
                 >
                   Cancel
                 </button>
-
                 <button
                   type="submit"
                   className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer shadow-md"
@@ -2151,72 +2169,273 @@ export const JobAnalyzerPage: React.FC = () => {
       )}
 
       {/* ========================================== */}
-      {/* 7. TEAM & PROFILES MODAL                   */}
-      {/* ========================================== */}
+      {/* 7. TEAM & PROFILES MODAL (IN-PLACE URL ENHANCED) */}
       {showTeamModal && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#121214] border border-[#27272A] rounded-2xl p-6 space-y-5 animate-in zoom-in-95">
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeProfilesModal();
+          }}
+        >
+          <div className="w-full max-w-xl bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6 space-y-5 shadow-2xl animate-in zoom-in-95 max-h-[85vh] flex flex-col overflow-hidden">
             
-            <div className="flex items-center justify-between border-b border-[#27272A] pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Users className="w-4 h-4 text-emerald-400" />
-                <span>Team & Profiles</span>
-              </h3>
-              <button onClick={() => setShowTeamModal(false)} className="text-gray-400 hover:text-white p-1">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-3 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-950/80 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-white">Profiles & Workspace</h3>
+                    <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      URL: ?view=profiles
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-400">In-place profiles management with active URL sync</p>
+                </div>
+              </div>
+              <button 
+                onClick={closeProfilesModal} 
+                className="text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-[#1e293b] transition-colors cursor-pointer"
+                title="Close and clean URL"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-xl bg-[#18181B] border border-[#27272A] flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-emerald-900 text-emerald-200 font-bold flex items-center justify-center text-xs">
-                    {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'EK'}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">{user?.name || 'Ejaz Karim'}</div>
-                    <div className="text-[10px] text-gray-400">Workspace Owner</div>
-                  </div>
-                </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/40">Owner</span>
-              </div>
+            {/* In-Modal Navigation Tabs */}
+            <div className="flex items-center gap-1 p-1 bg-[#090d14] rounded-xl border border-[#1e293b] text-xs font-mono shrink-0">
+              <button
+                onClick={() => setProfilesModalTab("profiles")}
+                className={`flex-1 py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  profilesModalTab === "profiles"
+                    ? "bg-[#1e293b] text-white shadow-xs border border-[#334155]"
+                    : "text-gray-400 hover:text-gray-200"
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Active Profiles</span>
+              </button>
+              <button
+                onClick={() => setProfilesModalTab("team")}
+                className={`flex-1 py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  profilesModalTab === "team"
+                    ? "bg-[#1e293b] text-white shadow-xs border border-[#334155]"
+                    : "text-gray-400 hover:text-gray-200"
+                }`}
+              >
+                <Users className="w-3.5 h-3.5 text-blue-400" />
+                <span>Team & Roles</span>
+              </button>
+              <button
+                onClick={() => setProfilesModalTab("portfolio")}
+                className={`flex-1 py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  profilesModalTab === "portfolio"
+                    ? "bg-[#1e293b] text-white shadow-xs border border-[#334155]"
+                    : "text-gray-400 hover:text-gray-200"
+                }`}
+              >
+                <FolderGit2 className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Portfolio ({portfolioProjects.length})</span>
+              </button>
+            </div>
 
-              <div className="p-3 rounded-xl bg-[#18181B] border border-[#27272A] flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-900 text-blue-200 font-bold flex items-center justify-center text-xs">
-                    SC
+            {/* Modal Body Tab Content */}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-4 text-xs font-sans">
+              
+              {/* TAB 1: ACTIVE TECHNICAL PROFILES */}
+              {profilesModalTab === "profiles" && (
+                <div className="space-y-3">
+                  <div className="text-[11px] text-gray-400 font-mono flex items-center justify-between">
+                    <span>SELECT ACTIVE PROPOSALA PROFILE</span>
+                    <span className="text-emerald-400 font-semibold">{selectedProfile}</span>
                   </div>
-                  <div>
-                    <div className="font-semibold text-white">Sarah Chen</div>
-                    <div className="text-[10px] text-gray-400">Fullstack Specialist</div>
-                  </div>
+
+                  {[
+                    { title: "Senior Fullstack Developer", subtitle: "React 18, Node.js, TypeScript, Cloud Native Architecture", rate: "$65/hr", score: "100% Match" },
+                    { title: "Lead AI & LLM Systems Engineer", subtitle: "Gemini 1.5, RAG Architecture, LangChain, Python, Vector DBs", rate: "$85/hr", score: "98% Match" },
+                    { title: "Mobile App Specialist (React Native/Flutter)", subtitle: "Cross-platform iOS & Android, Native Bridges, SQLite", rate: "$70/hr", score: "95% Match" },
+                    { title: "DevOps & Cloud Architect (GCP / AWS)", subtitle: "Terraform, Docker, Kubernetes, CI/CD, Serverless", rate: "$75/hr", score: "92% Match" },
+                    { title: "UI/UX & Frontend Lead", subtitle: "Tailwind CSS, Next.js, Design Systems, Motion, Accessibility", rate: "$60/hr", score: "94% Match" },
+                  ].map((prof) => (
+                    <div 
+                      key={prof.title}
+                      onClick={() => {
+                        setSelectedProfile(prof.title);
+                        addToast(`Switched active profile to: ${prof.title}`, "success");
+                      }}
+                      className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                        selectedProfile === prof.title
+                          ? "bg-emerald-950/30 border-emerald-500/60 text-white shadow-md"
+                          : "bg-[#111827] border-[#1e293b] text-gray-300 hover:border-gray-700 hover:bg-[#161f32]"
+                      }`}
+                    >
+                      <div className="space-y-1 min-w-0">
+                        <div className="font-semibold text-white flex items-center gap-2">
+                          <span>{prof.title}</span>
+                          {selectedProfile === prof.title && (
+                            <span className="text-[10px] px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-medium border border-emerald-500/40">Active</span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-gray-400 truncate">{prof.subtitle}</p>
+                      </div>
+
+                      <div className="text-right shrink-0 font-mono">
+                        <div className="text-emerald-400 font-bold text-xs">{prof.rate}</div>
+                        <div className="text-[10px] text-gray-500">{prof.score}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-[#27272A] text-gray-400">Admin</span>
+              )}
+
+              {/* TAB 2: TEAM MEMBERS */}
+              {profilesModalTab === "team" && (
+                <div className="space-y-3">
+                  <div className="text-[11px] text-gray-400 font-mono">TEAM MEMBERS & WORKSPACE ROLES</div>
+
+                  <div className="p-3.5 rounded-xl bg-[#111827] border border-[#1e293b] flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-emerald-900 text-emerald-200 font-bold flex items-center justify-center text-xs border border-emerald-700">
+                        {user?.name ? user.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : "EK"}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-white">{user?.name || "Ejaz Karim"}</div>
+                        <div className="text-[10px] text-gray-400">{user?.email || "hafeez@gmail.com"} • Primary Freelancer</div>
+                      </div>
+                    </div>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/40 font-mono font-semibold">Workspace Owner</span>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-[#111827] border border-[#1e293b] flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-blue-900 text-blue-200 font-bold flex items-center justify-center text-xs border border-blue-700">
+                        SC
+                      </div>
+                      <div>
+                        <div className="font-semibold text-white">Sarah Chen</div>
+                        <div className="text-[10px] text-gray-400">sarah.c@agency.com • Fullstack Specialist</div>
+                      </div>
+                    </div>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#1e293b] text-gray-300 font-mono font-semibold">Admin</span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      closeProfilesModal();
+                      setShowInviteTeamModal(true);
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer shadow-md mt-2 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Invite New Team Profile</span>
+                  </button>
+                </div>
+              )}
+
+              {/* TAB 3: PORTFOLIO & CASE STUDIES */}
+              {profilesModalTab === "portfolio" && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-[11px] text-gray-400 font-mono">
+                    <span>PORTFOLIO & PROOF PROFILES ({portfolioProjects.length})</span>
+                    <button
+                      onClick={() => {
+                        closeProfilesModal();
+                        setShowNewPortfolioModal(true);
+                      }}
+                      className="text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer font-sans"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Add Project</span>
+                    </button>
+                  </div>
+
+                  {portfolioProjects.length === 0 ? (
+                    <div className="p-6 text-center bg-[#111827] rounded-xl border border-[#1e293b] space-y-2">
+                      <FolderGit2 className="w-8 h-8 text-gray-600 mx-auto" />
+                      <div className="text-xs text-gray-300 font-semibold">No portfolio projects added yet</div>
+                      <p className="text-[11px] text-gray-500">Add case study proofs to attach directly into generated proposals.</p>
+                      <button
+                        onClick={() => {
+                          closeProfilesModal();
+                          setShowNewPortfolioModal(true);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 mt-1 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Create First Case Study</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                      {portfolioProjects.map((proj) => (
+                        <div 
+                          key={proj.id}
+                          className="p-3.5 rounded-xl bg-[#111827] border border-[#1e293b] space-y-2"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <div className="font-semibold text-white text-xs">{proj.title}</div>
+                              <div className="text-[10px] text-indigo-300 font-mono">{proj.clientIndustry}</div>
+                            </div>
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 font-mono">
+                              {proj.metrics || "Verified Proof"}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-400 line-clamp-2">{proj.summary}</p>
+                          <div className="flex flex-wrap gap-1 pt-1">
+                            {proj.techStack.map((tech) => (
+                              <span key={tech} className="text-[9px] px-1.5 py-0.2 rounded bg-[#1e293b] text-gray-300 font-mono">
+                                {tech}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-[#1e293b] flex flex-wrap items-center justify-between gap-2 shrink-0">
+              <div className="text-[11px] text-gray-400 flex items-center gap-1 font-mono">
+                <span>URL Synced:</span>
+                <span className="text-emerald-400 font-semibold">{window.location.search || "?view=profiles"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleShareWhatsApp}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                  title="Share Profiles details on WhatsApp"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share on WhatsApp</span>
+                </button>
+                <button
+                  onClick={closeProfilesModal}
+                  className="px-4 py-2 rounded-xl bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] text-white text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  Close & Return
+                </button>
               </div>
             </div>
 
-            <button
-              onClick={() => {
-                setShowTeamModal(false);
-                setShowInviteTeamModal(true);
-              }}
-              className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Invite Team Member</span>
-            </button>
           </div>
         </div>
       )}
 
-      {/* ========================================== */}
       {/* 8. INVITE TEAM MEMBER MODAL               */}
       {/* ========================================== */}
       {showInviteTeamModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#121214] border border-[#27272A] rounded-2xl p-6 space-y-5 animate-in zoom-in-95">
+          <div className="w-full max-w-md bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6 space-y-5 animate-in zoom-in-95">
             
-            <div className="flex items-center justify-between border-b border-[#27272A] pb-3">
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <Users className="w-4 h-4 text-emerald-400" />
                 <span>Invite Team Member</span>
@@ -2235,7 +2454,7 @@ export const JobAnalyzerPage: React.FC = () => {
                   placeholder="colleague@agency.com"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-[#111827] border border-[#1e293b] rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
@@ -2244,7 +2463,7 @@ export const JobAnalyzerPage: React.FC = () => {
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as any)}
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-[#111827] border border-[#1e293b] rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="Admin">Admin (Full access + proposal editing)</option>
                   <option value="Member">Member (Create & analyze proposals)</option>
@@ -2256,7 +2475,7 @@ export const JobAnalyzerPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowInviteTeamModal(false)}
-                  className="px-4 py-2.5 rounded-lg bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] text-gray-300 font-semibold"
+                  className="px-4 py-2.5 rounded-lg bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] text-gray-300 font-semibold"
                 >
                   Cancel
                 </button>
@@ -2278,9 +2497,9 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#121214] border border-[#27272A] rounded-2xl p-6 space-y-5 animate-in zoom-in-95">
+          <div className="w-full max-w-md bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6 space-y-5 animate-in zoom-in-95">
             
-            <div className="flex items-center justify-between border-b border-[#27272A] pb-3">
+            <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <Settings className="w-4 h-4 text-emerald-400" />
                 <span>Workspace Settings</span>
@@ -2297,13 +2516,13 @@ export const JobAnalyzerPage: React.FC = () => {
                   type="text"
                   value={activeWorkspace}
                   onChange={(e) => setActiveWorkspace(e.target.value)}
-                  className="w-full p-3 rounded-lg bg-[#18181B] border border-[#27272A] text-white text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full p-3 rounded-lg bg-[#111827] border border-[#1e293b] text-white text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
                 <label className="block text-gray-300 font-semibold mb-1">Gemini AI Key Proxy</label>
-                <div className="p-3 rounded-lg bg-[#18181B] border border-[#27272A] flex items-center justify-between">
+                <div className="p-3 rounded-lg bg-[#111827] border border-[#1e293b] flex items-center justify-between">
                   <span className="text-emerald-400 font-mono text-[11px]">Server Proxy Active (Encrypted)</span>
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 </div>
@@ -2311,7 +2530,7 @@ export const JobAnalyzerPage: React.FC = () => {
 
               <div>
                 <label className="block text-gray-300 font-semibold mb-1">Default Proposal Tone</label>
-                <select className="w-full p-3 rounded-lg bg-[#18181B] border border-[#27272A] text-white text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                <select className="w-full p-3 rounded-lg bg-[#111827] border border-[#1e293b] text-white text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
                   <option>Value-Focused (Recommended)</option>
                   <option>Direct & Short</option>
                   <option>Detailed Technical Case Study</option>
