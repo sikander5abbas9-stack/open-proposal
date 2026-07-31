@@ -12,7 +12,7 @@ import { collection, doc, getDocs, setDoc, deleteDoc } from 'firebase/firestore'
 
 export const PortfolioPage: React.FC = () => {
   const { user } = useAuth();
-  const userId = user?.uid || 'mock-uid-ejaz';
+  const userId = user?.uid || 'guest-user';
 
   const [projects, setProjects] = useState<PortfolioProject[]>(() => {
     try {
