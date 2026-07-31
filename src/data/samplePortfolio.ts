@@ -1,0 +1,48 @@
+import { PortfolioProject } from '../types';
+
+export const DEFAULT_PORTFOLIO: PortfolioProject[] = [
+  {
+    id: 'port-1',
+    title: 'FinTech Analytics Dashboard Performance Overhaul',
+    clientIndustry: 'SaaS / Financial Services',
+    summary: 'Optimized heavy data tables and chart rendering for a high-frequency trading web application serving 80,000 active daily users.',
+    techStack: ['React 18', 'TypeScript', 'Tailwind CSS', 'Node.js', 'Redis', 'WebSockets'],
+    keyOutcome: 'Reduced page initial render latency by 74% (from 4.2s to 1.1s) and eliminated UI lag during real-time data streaming.',
+    metrics: '74% faster load time, zero dropped frames, 80k active users',
+    relevantSkills: ['React', 'Performance Optimization', 'Node.js', 'TypeScript', 'Tailwind CSS', 'Dashboard'],
+    link: 'https://example.com/case-studies/fintech-dashboard',
+  },
+  {
+    id: 'port-2',
+    title: 'AI Enterprise Knowledge Assistant & PDF Synthesizer',
+    clientIndustry: 'B2B Artificial Intelligence',
+    summary: 'Designed and deployed an AI document analysis engine using Gemini models to process complex contracts, extract key clauses, and answer user queries.',
+    techStack: ['Gemini API', 'Node.js', 'Express', 'React', 'TypeScript', 'Tailwind CSS'],
+    keyOutcome: 'Automated 85% of contract review workflows for a 50-person legal operations team with 99.2% extraction accuracy.',
+    metrics: '85% workflow time saved, 99.2% parsing accuracy',
+    relevantSkills: ['Gemini API', 'LLM Integration', 'AI Agent Development', 'Node.js', 'React', 'TypeScript'],
+    link: 'https://example.com/case-studies/ai-assistant',
+  },
+  {
+    id: 'port-3',
+    title: 'Figma to High-Converting Webflow / React Design System',
+    clientIndustry: 'Marketing / E-commerce',
+    summary: 'Converted complex 20+ frame Figma design system into pixel-perfect responsive React components with subtle Framer Motion scroll interactions.',
+    techStack: ['React', 'Tailwind CSS', 'Framer Motion', 'Figma', 'TypeScript'],
+    keyOutcome: 'Achieved 98/100 Lighthouse performance score and boosted landing page visitor conversion rate by +32%.',
+    metrics: '98 Lighthouse score, +32% conversion rate boost',
+    relevantSkills: ['Figma to Webflow', 'Tailwind CSS', 'Framer Motion', 'Responsive Design', 'Front-End'],
+    link: 'https://example.com/case-studies/design-system',
+  },
+  {
+    id: 'port-4',
+    title: 'High-Throughput Data Pipeline & Automated Document Extractor',
+    clientIndustry: 'Logistics & Supply Chain',
+    summary: 'Built automated Python & Node scripts to parse 100,000+ shipping manifests and invoices per month into structured JSON databases.',
+    techStack: ['Python', 'Node.js', 'OCR Parsing', 'PostgreSQL', 'Docker'],
+    keyOutcome: 'Processed over 100k files with sub-second per-file latency and zero data loss.',
+    metrics: '100k+ documents parsed/month, <800ms per file',
+    relevantSkills: ['Python', 'Data Extraction', 'PDF Parsing', 'CSV'],
+    link: 'https://example.com/case-studies/data-pipeline',
+  },
+];

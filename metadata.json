@@ -1,0 +1,6 @@
+{
+  "name": "Open Proposal - Upwork Proposal & Job Analyzer",
+  "description": "Save Upwork Connects and land better client projects. Analyze Upwork jobs, score fit & risk, match past portfolio work, and generate high-converting proposal drafts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
