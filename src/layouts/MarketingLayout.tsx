@@ -5,7 +5,7 @@ import { Footer } from '../components/Footer';
 
 export const MarketingLayout: React.FC = () => {
   return (
-    <div className="min-h-screen bg-[#f7f2e8] text-[#17140f] font-sans antialiased flex flex-col justify-between selection:bg-[#17140f] selection:text-[#f7f2e8]">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans antialiased flex flex-col justify-between selection:bg-[#4F46E5] selection:text-white">
       <div>
         <Navbar />
         <main>
