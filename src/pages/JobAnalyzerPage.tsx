@@ -1054,7 +1054,7 @@ export const JobAnalyzerPage: React.FC = () => {
           <div className="flex items-center justify-between p-2 rounded-lg bg-[#121824] border border-[#1e293b]">
             <div className="flex items-center gap-2 truncate">
               <div className="w-7 h-7 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
-                {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'EK'}
+                {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : (user?.email ? user.email.substring(0, 2).toUpperCase() : 'US')}
               </div>
               <div className="truncate text-left">
                 <div className="text-xs font-semibold text-gray-200 truncate">{user?.name || (user?.email ? user.email.split("@")[0] : 'Workspace Member')}</div>
@@ -2299,7 +2299,7 @@ export const JobAnalyzerPage: React.FC = () => {
                   <div className="p-3.5 rounded-xl bg-[#111827] border border-[#1e293b] flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-emerald-900 text-emerald-200 font-bold flex items-center justify-center text-xs border border-emerald-700">
-                        {user?.name ? user.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : "EK"}
+                        {user?.name ? user.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : (user?.email ? user.email.substring(0, 2).toUpperCase() : "US")}
                       </div>
                       <div>
                         <div className="font-semibold text-white">{user?.name || (user?.email ? user.email.split("@")[0] : "Workspace Member")}</div>
