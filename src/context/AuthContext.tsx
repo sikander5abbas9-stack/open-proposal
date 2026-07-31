@@ -133,7 +133,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userDocRef = doc(db, 'users', fbUser.uid);
       await setDoc(userDocRef, { ...newUser, updatedAt: new Date().toISOString() }, { merge: true });
     } catch (error: any) {
-      console.error('Google Sign-In failed:', error);
+      if (error?.code !== 'auth/popup-closed-by-user' && error?.code !== 'auth/cancelled-popup-request') {
+        console.error('Google Sign-In failed:', error);
+      }
       throw error;
     }
   };
