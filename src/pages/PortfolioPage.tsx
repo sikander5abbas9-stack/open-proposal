@@ -16,12 +16,17 @@ export const PortfolioPage: React.FC = () => {
 
   const [projects, setProjects] = useState<PortfolioProject[]>(() => {
     try {
-      const saved = localStorage.getItem('proposala_portfolio');
-      if (saved) return JSON.parse(saved);
+      const saved = localStorage.getItem(`proposala_portfolio_${userId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const updated = parsed.slice(3);
+        localStorage.setItem(`proposala_portfolio_${userId}`, JSON.stringify(updated));
+        return updated;
+      }
     } catch (e) {
       console.error(e);
     }
-    return DEFAULT_PORTFOLIO;
+    return [];
   });
 
   useEffect(() => {
@@ -31,13 +36,11 @@ export const PortfolioPage: React.FC = () => {
         const snapshot = await getDocs(colRef);
         if (!snapshot.empty) {
           const fetched: PortfolioProject[] = snapshot.docs.map(d => d.data() as PortfolioProject);
-          setProjects(fetched);
+          const updated = fetched.slice(3);
+          setProjects(updated);
+          localStorage.setItem(`proposala_portfolio_${userId}`, JSON.stringify(updated));
         } else {
-          // Initialize Firestore with default portfolio if empty
-          for (const p of DEFAULT_PORTFOLIO) {
-            const docRef = doc(db, 'users', userId, 'portfolioProjects', p.id);
-            await setDoc(docRef, { ...p, userId, createdAt: new Date().toISOString() });
-          }
+          setProjects([]);
         }
       } catch (error) {
         handleFirestoreError(error, OperationType.LIST, `users/${userId}/portfolioProjects`);
@@ -62,7 +65,7 @@ export const PortfolioPage: React.FC = () => {
   const saveToStorage = async (updatedList: PortfolioProject[], newProj?: PortfolioProject, deletedId?: string) => {
     setProjects(updatedList);
     try {
-      localStorage.setItem('proposala_portfolio', JSON.stringify(updatedList));
+      localStorage.setItem(`proposala_portfolio_${userId}`, JSON.stringify(updatedList));
       if (newProj) {
         const docRef = doc(db, 'users', userId, 'portfolioProjects', newProj.id);
         await setDoc(docRef, { ...newProj, userId, createdAt: new Date().toISOString() });
@@ -270,69 +273,92 @@ export const PortfolioPage: React.FC = () => {
           </form>
         )}
 
-        {/* Portfolio Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              className="bg-[#f7f2e8] p-6 rounded-2xl border border-[#ddd2bf] shadow-sm flex flex-col justify-between space-y-4 hover:border-[#17140f] transition-all"
-            >
-              <div className="space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-[#17140f] text-[#f7f2e8]">
-                    {project.clientIndustry}
-                  </span>
-
-                  <button
-                    onClick={() => handleDeleteProject(project.id)}
-                    title="Delete project"
-                    className="p-1.5 rounded-lg text-[#17140f]/60 hover:text-red-600 hover:bg-red-100/50 transition-colors cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <h3 className="text-lg font-bold font-serif text-[#17140f]">{project.title}</h3>
-
-                <p className="text-xs text-[#17140f]/80 leading-relaxed font-sans">{project.summary}</p>
-
-                {/* Metrics Highlight pill */}
-                {project.metrics && (
-                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-950 text-xs font-medium space-y-1">
-                    <span className="font-bold text-emerald-800 flex items-center gap-1 text-[11px] font-mono">
-                      <Award className="w-3.5 h-3.5" /> Key Proven Metric:
-                    </span>
-                    <div>{project.metrics}</div>
-                  </div>
-                )}
-
-                {/* Tech stack pills */}
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {project.techStack.map((tech, i) => (
-                    <span key={i} className="text-[11px] font-mono bg-[#17140f]/5 text-[#17140f] border border-[#ddd2bf] px-2.5 py-0.5 rounded-md">
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-[#ddd2bf] flex items-center justify-between text-xs text-[#17140f]/60 font-sans">
-                <span>Included in AI job matching</span>
-                {project.link && (
-                  <a
-                    href={project.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#17140f] font-semibold font-mono hover:underline flex items-center gap-1"
-                  >
-                    <span>View Link</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                )}
-              </div>
+        {/* Portfolio Grid or Empty State */}
+        {projects.length === 0 ? (
+          <div className="bg-white p-12 rounded-2xl border border-[#E2E8F0] text-center space-y-6 shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mx-auto text-[#4F46E5]">
+              <Database className="w-8 h-8" />
             </div>
-          ))}
-        </div>
+            <div className="max-w-md mx-auto space-y-2">
+              <h3 className="text-xl font-bold text-[#0F172A] font-sans">Your Portfolio Bank is Empty</h3>
+              <p className="text-sm text-[#64748B]">
+                Welcome to Proposala! Add your past case studies, verified success metrics, and client deliverables so the AI proposal generator can automatically match them with Upwork jobs.
+              </p>
+            </div>
+            <div>
+              <button
+                onClick={() => setIsAdding(true)}
+                className="px-6 py-3 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold text-xs shadow-md transition-all inline-flex items-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Complete Your Profile & Add Portfolio</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {projects.map((project) => (
+              <div
+                key={project.id}
+                className="bg-white p-6 rounded-2xl border border-[#E2E8F0] shadow-sm flex flex-col justify-between space-y-4 hover:border-[#4F46E5] transition-all"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-[#EEF2FF] text-[#4F46E5] border border-indigo-100">
+                      {project.clientIndustry}
+                    </span>
+
+                    <button
+                      onClick={() => handleDeleteProject(project.id)}
+                      title="Delete project"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <h3 className="text-lg font-bold font-sans text-[#0F172A]">{project.title}</h3>
+
+                  <p className="text-xs text-[#64748B] leading-relaxed font-sans">{project.summary}</p>
+
+                  {/* Metrics Highlight pill */}
+                  {project.metrics && (
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs font-medium space-y-1">
+                      <span className="font-bold text-emerald-800 flex items-center gap-1 text-[11px] font-mono">
+                        <Award className="w-3.5 h-3.5" /> Key Proven Metric:
+                      </span>
+                      <div>{project.metrics}</div>
+                    </div>
+                  )}
+
+                  {/* Tech stack pills */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {project.techStack.map((tech, i) => (
+                      <span key={i} className="text-[11px] font-mono bg-slate-100 text-[#0F172A] border border-slate-200 px-2.5 py-0.5 rounded-md">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-sans">
+                  <span>Included in AI job matching</span>
+                  {project.link && (
+                    <a
+                      href={project.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#4F46E5] font-semibold font-mono hover:underline flex items-center gap-1"
+                    >
+                      <span>View Link</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
       </div>
     </div>
