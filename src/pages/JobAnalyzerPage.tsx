@@ -204,7 +204,7 @@ export const JobAnalyzerPage: React.FC = () => {
     const message = `🚀 *Proposala Workspace - Profiles & Team Details*
 
 📌 *Active Profile:* ${selectedProfile}
-👤 *Workspace Owner:* ${user?.name || "Ejaz Karim"} (${user?.email || "hafeez@gmail.com"})
+👤 *Workspace Owner:* ${user?.name || (user?.email ? user.email.split("@")[0] : "Workspace Member")} (${user?.email || "user@company.com"})
 💼 *Role:* Senior Freelance Technical Lead
 ⚡ *Proposala AI:* AI-powered Upwork proposal optimization & technical profile matching
 
@@ -230,7 +230,7 @@ export const JobAnalyzerPage: React.FC = () => {
   // Mobile Drawer & Workspace State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
-  const [activeWorkspace, setActiveWorkspace] = useState(user?.workspaceName || "Ejaz Karim's workspace");
+  const [activeWorkspace, setActiveWorkspace] = useState(user?.workspaceName || "My Workspace");
 
   // Nav Selection State
   const [activeNav, setActiveNav] = useState<'new' | 'history' | 'pastwork' | 'team' | 'settings'>('new');
@@ -281,7 +281,7 @@ export const JobAnalyzerPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const userId = user?.uid || 'mock-uid-ejaz';
+  const userId = user?.uid || 'guest-user';
 
   // Portfolio state
   const [portfolioProjects, setPortfolioProjects] = useState<PortfolioProject[]>(() => {
@@ -540,7 +540,7 @@ export const JobAnalyzerPage: React.FC = () => {
         closeText = `I am available to start immediately today and can deliver the first working prototype within 48 hours. Looking forward to connecting!`;
       }
 
-      const fullDraft = `${hookText}\n\n${middleText}\n\n${proofText}\n\n${closeText}\n\nBest regards,\n${user?.name || 'Ejaz Karim'}\n${selectedProfile} • ${selectedDept}\nEnglish: ${englishLevel} | Model: ${aiModel}`;
+      const fullDraft = `${hookText}\n\n${middleText}\n\n${proofText}\n\n${closeText}\n\nBest regards,\n${user?.name || (user?.email ? user.email.split("@")[0] : 'Workspace Member')}\n${selectedProfile} • ${selectedDept}\nEnglish: ${englishLevel} | Model: ${aiModel}`;
       setEditedProposalText(fullDraft);
       addToast(`Generated proposal draft using ${aiModel} (${openerShape} + ${middleShape} + ${closeShape})!`, 'success');
     }, 600);
@@ -576,7 +576,7 @@ export const JobAnalyzerPage: React.FC = () => {
       );
     } else {
       setEditedProposalText(
-        `Hi there,\n\n${draft.hook}\n\n${draft.body}\n\nVerified Past Case Study:\n${caseStudyRef}\n\nProposed Next Step:\n${draft.callToAction}\n\nBest regards,\n${user?.name || 'Ejaz Karim'}`
+        `Hi there,\n\n${draft.hook}\n\n${draft.body}\n\nVerified Past Case Study:\n${caseStudyRef}\n\nProposed Next Step:\n${draft.callToAction}\n\nBest regards,\n${user?.name || (user?.email ? user.email.split("@")[0] : 'Workspace Member')}`
       );
     }
   };
@@ -637,7 +637,7 @@ export const JobAnalyzerPage: React.FC = () => {
         addToast('AI Refine: Condensed proposal into punchy pitch.', 'success');
       } else if (action === 'professional') {
         setEditedProposalText((prev) => {
-          return `Dear Hiring Manager,\n\nI am writing to express my strong interest in executing this project. My technical background aligns directly with your core stack requirements.\n\nSummary of Technical Qualification:\n• Delivered ${activeProject.title} with verified metrics (${activeProject.metrics}).\n• Zero-downtime deployment standards and strict TypeScript coverage.\n\nI look forward to discussing how we can deliver these outcomes for your team.\n\nSincerely,\n${user?.name || 'Ejaz Karim'}`;
+          return `Dear Hiring Manager,\n\nI am writing to express my strong interest in executing this project. My technical background aligns directly with your core stack requirements.\n\nSummary of Technical Qualification:\n• Delivered ${activeProject.title} with verified metrics (${activeProject.metrics}).\n• Zero-downtime deployment standards and strict TypeScript coverage.\n\nI look forward to discussing how we can deliver these outcomes for your team.\n\nSincerely,\n${user?.name || (user?.email ? user.email.split("@")[0] : 'Workspace Member')}`;
         });
         addToast('AI Refine: Formatted proposal into executive tone.', 'success');
       } else if (action === 'pastwork') {
@@ -889,10 +889,10 @@ export const JobAnalyzerPage: React.FC = () => {
             {isWorkspaceOpen && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-[#121824] border border-[#1e293b] rounded-lg shadow-2xl z-50 p-1 space-y-0.5 animate-in fade-in zoom-in-95">
                 <button
-                  onClick={() => { setActiveWorkspace(user?.workspaceName || "Ejaz Karim's workspace"); setIsWorkspaceOpen(false); }}
+                  onClick={() => { setActiveWorkspace(user?.workspaceName || "My Workspace"); setIsWorkspaceOpen(false); }}
                   className="w-full text-left px-2.5 py-1.5 text-xs text-white hover:bg-[#1e293b] rounded flex items-center justify-between font-medium"
                 >
-                  <span className="truncate">{user?.workspaceName || "Ejaz Karim's workspace"}</span>
+                  <span className="truncate">{user?.workspaceName || "My Workspace"}</span>
                   <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 </button>
                 <button
@@ -1057,8 +1057,8 @@ export const JobAnalyzerPage: React.FC = () => {
                 {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'EK'}
               </div>
               <div className="truncate text-left">
-                <div className="text-xs font-semibold text-gray-200 truncate">{user?.name || 'Ejaz Karim'}</div>
-                <div className="text-[10px] text-gray-400 truncate">{user?.email || 'hafeez@gmail.com'}</div>
+                <div className="text-xs font-semibold text-gray-200 truncate">{user?.name || (user?.email ? user.email.split("@")[0] : 'Workspace Member')}</div>
+                <div className="text-[10px] text-gray-400 truncate">{user?.email || 'user@company.com'}</div>
               </div>
             </div>
             
@@ -2302,8 +2302,8 @@ export const JobAnalyzerPage: React.FC = () => {
                         {user?.name ? user.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : "EK"}
                       </div>
                       <div>
-                        <div className="font-semibold text-white">{user?.name || "Ejaz Karim"}</div>
-                        <div className="text-[10px] text-gray-400">{user?.email || "hafeez@gmail.com"} • Primary Freelancer</div>
+                        <div className="font-semibold text-white">{user?.name || (user?.email ? user.email.split("@")[0] : "Workspace Member")}</div>
+                        <div className="text-[10px] text-gray-400">{user?.email || "user@company.com"} • Primary Freelancer</div>
                       </div>
                     </div>
                     <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/40 font-mono font-semibold">Workspace Owner</span>
