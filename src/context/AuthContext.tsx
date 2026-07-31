@@ -39,12 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.error('Failed to parse saved user state', e);
     }
-    return {
-      uid: 'mock-uid-ejaz',
-      name: 'Ejaz Karim',
-      email: 'ejaz@proposala.io',
-      workspaceName: "Ejaz Karim's workspace",
-    };
+    return null;
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -56,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.error('Failed to parse saved auth state', e);
     }
-    return true;
+    return false;
   });
 
   useEffect(() => {
@@ -103,11 +98,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, _password?: string) => {
     const extractedName = email.split('@')[0] || 'User';
     const formattedName = extractedName.charAt(0).toUpperCase() + extractedName.slice(1);
+    const deterministicUid = `user_${email.replace(/[^a-zA-Z0-9]/g, '_')}`;
     const newUser: User = {
-      uid: `uid-${Date.now()}`,
-      name: email.includes('ejaz') ? 'Ejaz Karim' : formattedName,
+      uid: deterministicUid,
+      name: formattedName,
       email: email,
-      workspaceName: `${email.includes('ejaz') ? 'Ejaz Karim' : formattedName}'s workspace`,
+      workspaceName: `${formattedName}'s workspace`,
     };
     setUser(newUser);
     setIsAuthenticated(true);
