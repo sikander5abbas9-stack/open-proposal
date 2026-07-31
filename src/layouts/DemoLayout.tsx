@@ -4,19 +4,19 @@ import { Check, ArrowLeft, Sparkles } from 'lucide-react';
 
 export const DemoLayout: React.FC = () => {
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#022C22] font-sans antialiased flex flex-col justify-between selection:bg-emerald-600 selection:text-white">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans antialiased flex flex-col justify-between selection:bg-[#4F46E5] selection:text-white">
       
       {/* Simplified Header for Demo Page */}
-      <header className="bg-[#FAF9F6]/90 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-40">
+      <header className="bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] sticky top-0 z-40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
           
           {/* Logo with Link back to Home */}
           <Link to="/" className="flex items-center gap-2 group focus:outline-none">
-            <div className="w-6 h-6 rounded-md bg-amber-400/20 border border-amber-400/40 flex items-center justify-center shrink-0">
-              <Check className="w-3.5 h-3.5 text-amber-500 stroke-[3]" />
+            <div className="w-6 h-6 rounded-lg bg-[#4F46E5] flex items-center justify-center shrink-0 shadow-xs">
+              <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
             </div>
-            <span className="text-lg sm:text-xl font-bold tracking-widest text-[#022C22] uppercase font-sans">
-              OPEN PROPOSAL
+            <span className="text-lg sm:text-xl font-bold tracking-tight text-[#0F172A] uppercase font-sans">
+              PROPOSALA
             </span>
           </Link>
 
@@ -24,15 +24,15 @@ export const DemoLayout: React.FC = () => {
           <div className="flex items-center gap-3">
             <Link
               to="/analyzer"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-emerald-900 bg-emerald-100/60 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#0F172A] bg-[#EEF2FF] hover:bg-[#E0E7FF] border border-[#E2E8F0] rounded-lg transition-all"
             >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+              <Sparkles className="w-3.5 h-3.5 text-[#4F46E5]" />
               <span>Test Live Analyzer</span>
             </Link>
 
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-emerald-950/10 rounded-lg transition-all shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#0F172A] bg-white hover:bg-slate-50 border border-[#E2E8F0] rounded-lg transition-all shadow-xs"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Home</span>
@@ -48,17 +48,17 @@ export const DemoLayout: React.FC = () => {
       </main>
 
       {/* Minimal Footer */}
-      <footer className="bg-[#FAF9F6] border-t border-gray-200/80 py-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-500">
+      <footer className="bg-white border-t border-[#E2E8F0] py-8 px-4 sm:px-6 lg:px-8 text-xs text-[#64748B]">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <p>
             © 2026 uConnect Technologies PVT LTD. All rights reserved. Open Proposal is a product of uConnect Technologies PVT LTD.
           </p>
-          <div className="flex items-center gap-4 text-slate-600 font-medium">
-            <Link to="/terms" className="hover:text-emerald-800 transition-colors">Terms of Service</Link>
+          <div className="flex items-center gap-4 text-[#0F172A] font-medium">
+            <Link to="/terms" className="hover:text-[#4F46E5] transition-colors">Terms of Service</Link>
             <span>•</span>
-            <Link to="/privacy" className="hover:text-emerald-800 transition-colors">Privacy Policy</Link>
+            <Link to="/privacy" className="hover:text-[#4F46E5] transition-colors">Privacy Policy</Link>
             <span>•</span>
-            <Link to="/contact" className="hover:text-emerald-800 transition-colors">Contact</Link>
+            <Link to="/contact" className="hover:text-[#4F46E5] transition-colors">Contact</Link>
           </div>
         </div>
       </footer>
