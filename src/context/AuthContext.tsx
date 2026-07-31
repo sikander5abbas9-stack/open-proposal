@@ -132,10 +132,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthenticated(true);
       const userDocRef = doc(db, 'users', fbUser.uid);
       await setDoc(userDocRef, { ...newUser, updatedAt: new Date().toISOString() }, { merge: true });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Google Sign-In failed:', error);
-      // Fallback to demo login if popup blocked or offline
-      await login('ejaz@proposala.io');
+      throw error;
     }
   };
 
