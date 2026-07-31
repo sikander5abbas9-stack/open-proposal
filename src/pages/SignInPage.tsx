@@ -4,8 +4,8 @@ import { Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const SignInPage: React.FC = () => {
-  const [email, setEmail] = useState('ejaz@proposala.io');
-  const [password, setPassword] = useState('••••••••');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   
