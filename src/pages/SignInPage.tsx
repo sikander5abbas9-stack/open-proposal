@@ -54,31 +54,31 @@ export const SignInPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f2e8] text-[#17140f] font-sans antialiased flex flex-col justify-center items-center px-4 py-8 selection:bg-[#17140f] selection:text-[#f7f2e8]">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased flex flex-col justify-center items-center px-4 py-8 selection:bg-indigo-600 selection:text-white">
       
-      {/* Centered Box (max-width 380px) */}
-      <div className="w-full max-w-[380px] mx-auto space-y-6 bg-white p-8 rounded-2xl border border-[#ddd2bf] shadow-sm">
+      {/* Centered Box (max-width 400px) */}
+      <div className="w-full max-w-[400px] mx-auto space-y-6 bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
         
         {/* Header: Brand & Main Heading */}
         <div className="text-left space-y-1">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg bg-[#17140f] flex items-center justify-center text-[#f7f2e8]">
-              <Sparkles className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-xs">
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span className="text-[10px] tracking-[0.2em] text-[#17140f]/70 font-mono uppercase font-semibold">
+            <span className="text-xs tracking-[0.15em] text-indigo-600 font-mono uppercase font-bold">
               PROPOSALA
             </span>
           </div>
-          <h1 className="text-2xl font-serif font-bold text-[#17140f] tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Sign in
           </h1>
-          <p className="text-xs text-[#17140f]/70 font-sans">
+          <p className="text-xs text-slate-500 font-sans">
             Access your AI job analyzer & proposals workspace.
           </p>
         </div>
 
         {errorMsg && (
-          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
+          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
             {errorMsg}
           </div>
         )}
@@ -89,7 +89,7 @@ export const SignInPage: React.FC = () => {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={isSubmitting}
-            className="w-full bg-[#f7f2e8] hover:bg-[#efe8d8] text-[#17140f] border border-[#ddd2bf] text-xs font-mono font-semibold rounded-xl py-3 transition-colors shadow-xs flex items-center justify-center gap-2.5 cursor-pointer"
+            className="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-mono font-semibold rounded-xl py-3 transition-colors shadow-2xs flex items-center justify-center gap-2.5 cursor-pointer"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
@@ -103,10 +103,10 @@ export const SignInPage: React.FC = () => {
 
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#ddd2bf]" />
+            <div className="w-full border-t border-slate-200" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-3 text-[#17140f]/50 font-mono text-[10px]">OR EMAIL</span>
+            <span className="bg-white px-3 text-slate-400 font-mono text-[10px]">OR EMAIL</span>
           </div>
         </div>
 
@@ -117,7 +117,7 @@ export const SignInPage: React.FC = () => {
           <div>
             <label 
               htmlFor="email"
-              className="block text-[11px] tracking-wider text-[#17140f]/70 font-mono uppercase mb-1 font-semibold"
+              className="block text-[11px] tracking-wider text-slate-600 font-mono uppercase mb-1 font-bold"
             >
               EMAIL
             </label>
@@ -128,7 +128,7 @@ export const SignInPage: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@company.com"
-              className="w-full bg-[#f7f2e8] border border-[#ddd2bf] rounded-xl text-xs p-3 text-[#17140f] placeholder-[#17140f]/40 focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl text-xs p-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-sans"
             />
           </div>
 
@@ -137,14 +137,14 @@ export const SignInPage: React.FC = () => {
             <div className="flex items-center justify-between mb-1">
               <label 
                 htmlFor="password"
-                className="block text-[11px] tracking-wider text-[#17140f]/70 font-mono uppercase font-semibold"
+                className="block text-[11px] tracking-wider text-slate-600 font-mono uppercase font-bold"
               >
                 PASSWORD
               </label>
               <a 
                 href="#forgot" 
                 onClick={(e) => { e.preventDefault(); alert('Password reset link sent to your email.'); }}
-                className="text-[11px] text-[#17140f]/70 hover:text-[#17140f] transition-colors"
+                className="text-[11px] text-indigo-600 hover:underline transition-colors font-sans"
               >
                 Forgot?
               </a>
@@ -156,7 +156,7 @@ export const SignInPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-[#f7f2e8] border border-[#ddd2bf] rounded-xl text-xs p-3 text-[#17140f] placeholder-[#17140f]/40 focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl text-xs p-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-sans"
             />
           </div>
 
@@ -165,11 +165,11 @@ export const SignInPage: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-[#17140f] text-[#f7f2e8] hover:bg-[#27241e] text-xs font-mono font-bold rounded-xl py-3 transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-mono font-bold rounded-xl py-3 transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin text-[#ddd2bf]" />
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
                   <span>Signing in...</span>
                 </>
               ) : (
@@ -181,15 +181,15 @@ export const SignInPage: React.FC = () => {
         </form>
 
         {/* Secondary Links & Footer */}
-        <div className="pt-4 border-t border-[#ddd2bf] text-center space-y-2">
-          <p className="text-xs text-[#17140f]/80">
+        <div className="pt-4 border-t border-slate-200 text-center space-y-2">
+          <p className="text-xs text-slate-600">
             Don't have an account?{' '}
-            <Link to="/request-demo" className="text-[#17140f] font-semibold underline hover:text-black transition-colors">
+            <Link to="/request-demo" className="text-indigo-600 font-semibold hover:underline transition-colors">
               Request a demo
             </Link>
           </p>
           <div>
-            <Link to="/" className="text-xs text-[#17140f]/60 hover:text-[#17140f] transition-colors">
+            <Link to="/" className="text-xs text-slate-500 hover:text-slate-800 transition-colors">
               ← Back to home
             </Link>
           </div>
