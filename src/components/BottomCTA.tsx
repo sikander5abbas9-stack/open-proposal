@@ -1,18 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
 
 export const BottomCTA: React.FC = () => {
   return (
-    <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-[#F4F8F5]">
-      <div className="max-w-5xl mx-auto bg-[#0F172A] border border-slate-800 rounded-2xl py-14 px-6 sm:px-12 text-center space-y-6 shadow-xl relative overflow-hidden">
+    <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-slate-50">
+      <div className="max-w-5xl mx-auto bg-slate-900 border border-slate-800 rounded-sm py-14 px-6 sm:px-12 text-center space-y-6 shadow-xl relative overflow-hidden">
         
-        {/* Subtle glow effect */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-emerald-500/10 blur-3xl pointer-events-none rounded-full" />
+        {/* Subtle background glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-emerald-500/10 blur-3xl pointer-events-none" />
 
         {/* Tag */}
         <div className="relative z-10">
-          <span className="inline-block bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
+          <span className="inline-block bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 px-3.5 py-1 rounded-sm text-xs font-semibold uppercase tracking-wider">
             NEXT STEP
           </span>
         </div>
@@ -31,10 +30,9 @@ export const BottomCTA: React.FC = () => {
         <div className="relative z-10 pt-2 flex justify-center">
           <Link
             to="/request-demo"
-            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-emerald-900/40 transition-all transform hover:-translate-y-0.5 active:scale-95"
+            className="inline-flex items-center justify-center px-6 py-3.5 rounded-sm bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm sm:text-base shadow-lg transition-all"
           >
             <span>Request a demo</span>
-            <ArrowRight className="w-4 h-4 text-emerald-200" />
           </Link>
         </div>
 
