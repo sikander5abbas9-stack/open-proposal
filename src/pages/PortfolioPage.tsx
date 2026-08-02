@@ -119,24 +119,24 @@ export const PortfolioPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f2e8] text-[#17140f] py-8 px-4 sm:px-6 lg:px-8 selection:bg-[#17140f] selection:text-[#f7f2e8]">
+    <div className="min-h-screen bg-slate-50 text-slate-900 py-8 px-4 sm:px-6 lg:px-8 selection:bg-indigo-600 selection:text-white">
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header Banner */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#f7f2e8] p-6 rounded-2xl border border-[#ddd2bf] shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div>
-            <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#17140f]/70 mb-1">
-              <Link to="/" className="hover:text-[#17140f] flex items-center gap-1">
+            <div className="flex items-center gap-2 text-xs font-mono font-semibold text-slate-900/70 mb-1">
+              <Link to="/" className="hover:text-slate-900 flex items-center gap-1">
                 <ArrowLeft className="w-3.5 h-3.5" /> Home
               </Link>
               <span>/</span>
-              <span className="text-[#17140f] font-bold">Portfolio Bank Manager</span>
+              <span className="text-slate-900 font-bold">Portfolio Bank Manager</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#17140f] font-serif tracking-tight flex items-center gap-2">
-              <Database className="w-7 h-7 text-[#17140f]" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-serif tracking-tight flex items-center gap-2">
+              <Database className="w-7 h-7 text-slate-900" />
               <span>Agency & Freelancer Portfolio Bank</span>
             </h1>
-            <p className="text-[#17140f]/80 text-sm mt-1 font-sans">
+            <p className="text-slate-900/80 text-sm mt-1 font-sans">
               Store your best case studies, verified metrics, and tech stacks. Proposala pulls these into proposal drafts automatically.
             </p>
           </div>
@@ -144,16 +144,16 @@ export const PortfolioPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsAdding(!isAdding)}
-              className="px-5 py-2.5 rounded-xl bg-[#17140f] hover:bg-[#27241e] text-[#f7f2e8] font-mono font-bold text-xs shadow-md flex items-center gap-2 transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-[#27241e] text-slate-50 font-mono font-bold text-xs shadow-md flex items-center gap-2 transition-all cursor-pointer"
             >
-              <Plus className="w-4 h-4 text-[#ddd2bf]" />
+              <Plus className="w-4 h-4 text-slate-200" />
               <span>{isAdding ? 'Close Form' : 'Add New Case Study'}</span>
             </button>
             <Link
               to="/dashboard"
-              className="px-4 py-2.5 rounded-xl bg-[#17140f]/5 hover:bg-[#17140f]/10 text-[#17140f] border border-[#ddd2bf] font-mono font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors"
+              className="px-4 py-2.5 rounded-xl bg-indigo-600/5 hover:bg-indigo-600/10 text-slate-900 border border-slate-200 font-mono font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors"
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#17140f]" />
+              <Sparkles className="w-3.5 h-3.5 text-slate-900" />
               <span>Test with Job Analyzer</span>
             </Link>
           </div>
@@ -168,89 +168,89 @@ export const PortfolioPage: React.FC = () => {
 
         {/* Add Project Form Drawer */}
         {isAdding && (
-          <form onSubmit={handleAddProject} className="bg-[#f7f2e8] p-6 rounded-2xl border border-[#ddd2bf] shadow-sm space-y-4 animate-fade-in">
-            <h3 className="text-base font-bold font-serif text-[#17140f] flex items-center gap-2">
-              <Plus className="w-4 h-4 text-[#17140f]" />
+          <form onSubmit={handleAddProject} className="bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 animate-fade-in">
+            <h3 className="text-base font-bold font-serif text-slate-900 flex items-center gap-2">
+              <Plus className="w-4 h-4 text-slate-900" />
               <span>Add New Case Study to Portfolio Bank</span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div>
-                <label className="block text-[#17140f] font-semibold mb-1">Project Title *</label>
+                <label className="block text-slate-900 font-semibold mb-1">Project Title *</label>
                 <input
                   type="text"
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Real-Time Analytics Dashboard Performance Overhaul"
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#ddd2bf] text-[#17140f] text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#17140f] font-semibold mb-1">Client Industry</label>
+                <label className="block text-slate-900 font-semibold mb-1">Client Industry</label>
                 <input
                   type="text"
                   value={clientIndustry}
                   onChange={(e) => setClientIndustry(e.target.value)}
                   placeholder="e.g. SaaS / FinTech"
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#ddd2bf] text-[#17140f] text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[#17140f] font-semibold mb-1">Project Summary & Problem Solved *</label>
+                <label className="block text-slate-900 font-semibold mb-1">Project Summary & Problem Solved *</label>
                 <textarea
                   required
                   rows={3}
                   value={summary}
                   onChange={(e) => setSummary(e.target.value)}
                   placeholder="Describe the main bottleneck solved and how you executed it..."
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#ddd2bf] text-[#17140f] text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none font-sans"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none font-sans"
                 />
               </div>
 
               <div>
-                <label className="block text-[#17140f] font-semibold mb-1">Tech Stack (comma separated)</label>
+                <label className="block text-slate-900 font-semibold mb-1">Tech Stack (comma separated)</label>
                 <input
                   type="text"
                   value={techStackInput}
                   onChange={(e) => setTechStackInput(e.target.value)}
                   placeholder="React, Node.js, TypeScript, Tailwind"
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#ddd2bf] text-[#17140f] text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#17140f] font-semibold mb-1">Key Measurable Outcome / Metrics</label>
+                <label className="block text-slate-900 font-semibold mb-1">Key Measurable Outcome / Metrics</label>
                 <input
                   type="text"
                   value={metrics}
                   onChange={(e) => setMetrics(e.target.value)}
                   placeholder="e.g. 74% faster load time, +32% conversion"
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#ddd2bf] text-[#17140f] text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#17140f] font-semibold mb-1">Outcome Rationale Summary</label>
+                <label className="block text-slate-900 font-semibold mb-1">Outcome Rationale Summary</label>
                 <input
                   type="text"
                   value={keyOutcome}
                   onChange={(e) => setKeyOutcome(e.target.value)}
                   placeholder="e.g. Reduced initial render latency from 4.2s to 1.1s."
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#ddd2bf] text-[#17140f] text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#17140f] font-semibold mb-1">Case Study Link (Optional)</label>
+                <label className="block text-slate-900 font-semibold mb-1">Case Study Link (Optional)</label>
                 <input
                   type="text"
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
                   placeholder="https://example.com/case-study"
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#ddd2bf] text-[#17140f] text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:ring-1 focus:ring-[#17140f] focus:outline-none"
                 />
               </div>
             </div>
@@ -259,13 +259,13 @@ export const PortfolioPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsAdding(false)}
-                className="px-4 py-2 rounded-xl bg-[#17140f]/5 hover:bg-[#17140f]/10 text-[#17140f] font-bold text-xs border border-[#ddd2bf] cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-indigo-600/5 hover:bg-indigo-600/10 text-slate-900 font-bold text-xs border border-slate-200 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-[#17140f] hover:bg-[#27241e] text-[#f7f2e8] font-bold text-xs shadow-md cursor-pointer font-mono"
+                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-[#27241e] text-slate-50 font-bold text-xs shadow-md cursor-pointer font-mono"
               >
                 Save to Portfolio Bank
               </button>
@@ -275,20 +275,20 @@ export const PortfolioPage: React.FC = () => {
 
         {/* Portfolio Grid or Empty State */}
         {projects.length === 0 ? (
-          <div className="bg-white p-12 rounded-2xl border border-[#E2E8F0] text-center space-y-6 shadow-sm">
-            <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mx-auto text-[#4F46E5]">
+          <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-6 shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mx-auto text-indigo-600">
               <Database className="w-8 h-8" />
             </div>
             <div className="max-w-md mx-auto space-y-2">
-              <h3 className="text-xl font-bold text-[#0F172A] font-sans">Your Portfolio Bank is Empty</h3>
-              <p className="text-sm text-[#64748B]">
+              <h3 className="text-xl font-bold text-slate-900 font-sans">Your Portfolio Bank is Empty</h3>
+              <p className="text-sm text-slate-500">
                 Welcome to Proposala! Add your past case studies, verified success metrics, and client deliverables so the AI proposal generator can automatically match them with Upwork jobs.
               </p>
             </div>
             <div>
               <button
                 onClick={() => setIsAdding(true)}
-                className="px-6 py-3 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold text-xs shadow-md transition-all inline-flex items-center gap-2 cursor-pointer"
+                className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-[#4338CA] text-white font-bold text-xs shadow-md transition-all inline-flex items-center gap-2 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>Complete Your Profile & Add Portfolio</span>
@@ -300,11 +300,11 @@ export const PortfolioPage: React.FC = () => {
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="bg-white p-6 rounded-2xl border border-[#E2E8F0] shadow-sm flex flex-col justify-between space-y-4 hover:border-[#4F46E5] transition-all"
+                className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4 hover:border-[#4F46E5] transition-all"
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-[#EEF2FF] text-[#4F46E5] border border-indigo-100">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100">
                       {project.clientIndustry}
                     </span>
 
@@ -317,9 +317,9 @@ export const PortfolioPage: React.FC = () => {
                     </button>
                   </div>
 
-                  <h3 className="text-lg font-bold font-sans text-[#0F172A]">{project.title}</h3>
+                  <h3 className="text-lg font-bold font-sans text-slate-900">{project.title}</h3>
 
-                  <p className="text-xs text-[#64748B] leading-relaxed font-sans">{project.summary}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed font-sans">{project.summary}</p>
 
                   {/* Metrics Highlight pill */}
                   {project.metrics && (
@@ -334,7 +334,7 @@ export const PortfolioPage: React.FC = () => {
                   {/* Tech stack pills */}
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {project.techStack.map((tech, i) => (
-                      <span key={i} className="text-[11px] font-mono bg-slate-100 text-[#0F172A] border border-slate-200 px-2.5 py-0.5 rounded-md">
+                      <span key={i} className="text-[11px] font-mono bg-slate-100 text-slate-900 border border-slate-200 px-2.5 py-0.5 rounded-md">
                         {tech}
                       </span>
                     ))}
@@ -348,7 +348,7 @@ export const PortfolioPage: React.FC = () => {
                       href={project.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#4F46E5] font-semibold font-mono hover:underline flex items-center gap-1"
+                      className="text-indigo-600 font-semibold font-mono hover:underline flex items-center gap-1"
                     >
                       <span>View Link</span>
                       <ExternalLink className="w-3.5 h-3.5" />
