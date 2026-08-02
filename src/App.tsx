@@ -56,11 +56,17 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppWorkspaceLayout />}>
               <Route path="/dashboard" element={<JobAnalyzerPage />} />
+              <Route path="/proposals/new" element={<JobAnalyzerPage />} />
               <Route path="/analyzer" element={<JobAnalyzerPage />} />
               <Route path="/analyzer/:jobId" element={<JobAnalyzerPage />} />
-              <Route path="/portfolio" element={<Navigate to="/dashboard?view=profiles" replace />} />
-              <Route path="/profiles" element={<Navigate to="/dashboard?view=profiles" replace />} />
-              <Route path="/profile" element={<Navigate to="/dashboard?view=profiles" replace />} />
+              <Route path="/proposals" element={<JobAnalyzerPage />} />
+              <Route path="/deal-center" element={<JobAnalyzerPage />} />
+              <Route path="/profiles" element={<JobAnalyzerPage />} />
+              <Route path="/atoms" element={<JobAnalyzerPage />} />
+              <Route path="/proposal-library" element={<JobAnalyzerPage />} />
+              <Route path="/account" element={<JobAnalyzerPage />} />
+              <Route path="/portfolio" element={<Navigate to="/profiles" replace />} />
+              <Route path="/profile" element={<Navigate to="/profiles" replace />} />
             </Route>
           </Route>
 
