@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { 
   Sparkles, ShieldCheck, CheckCircle2, ArrowRight, Zap, RefreshCw, 
@@ -6,7 +6,8 @@ import {
   Users, Settings, Plus, FileText, CheckCircle, Eye, ExternalLink, 
   ChevronRight, Edit3, X, Terminal, Filter, Layers, BarChart3, HelpCircle, 
   LogOut, Menu, Download, Trash2, Search, SlidersHorizontal, Info, Wifi, 
-  WifiOff, FileSpreadsheet, Share2, MessageSquare, ArrowUpRight, Sliders, Cpu, Layers3
+  WifiOff, FileSpreadsheet, Share2, MessageSquare, ArrowUpRight, Sliders, Cpu, Layers3,
+  Sun, Moon, Monitor
 } from 'lucide-react';
 import { SAMPLE_JOBS } from '../data/sampleJobs';
 import { JobAnalysisResult, PortfolioProject } from '../types';
@@ -237,6 +238,9 @@ export const JobAnalyzerPage: React.FC = () => {
 
   const location = useLocation();
 
+  // Main scrollable content reference for auto-scroll to top on navigation
+  const mainContentRef = useRef<HTMLDivElement>(null);
+
   // Mobile Drawer & Workspace State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
@@ -246,15 +250,65 @@ export const JobAnalyzerPage: React.FC = () => {
   const [activeNav, setActiveNav] = useState<'dashboard' | 'new' | 'proposals' | 'deal-center' | 'profiles' | 'library' | 'account'>('dashboard');
   const [showVideoModal, setShowVideoModal] = useState(false);
 
-  // UI Density State (Defaulting to 'medium' / 'standard' as requested)
+  // Scroll main content container to top whenever navigation or location changes
+  useEffect(() => {
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTop = 0;
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeNav, location.pathname, location.search]);
+
+  // UI Density State (Defaulting to 'compact' / Small density as requested)
   const [uiDensity, setUiDensity] = useState<'compact' | 'medium' | 'standard'>(() => {
-    return (localStorage.getItem('proposala_ui_density') as 'compact' | 'medium' | 'standard') || 'medium';
+    return (localStorage.getItem('proposala_ui_density') as 'compact' | 'medium' | 'standard') || 'compact';
   });
 
   const handleDensityChange = (density: 'compact' | 'medium' | 'standard') => {
     setUiDensity(density);
     localStorage.setItem('proposala_ui_density', density);
   };
+
+  // Theme Mode State ('system' | 'light' | 'dark')
+  const [themeMode, setThemeMode] = useState<'system' | 'light' | 'dark'>(() => {
+    return (localStorage.getItem('proposala_theme_mode') as 'system' | 'light' | 'dark') || 'system';
+  });
+
+  const cycleThemeMode = () => {
+    setThemeMode((prev) => {
+      if (prev === 'light') return 'dark';
+      if (prev === 'dark') return 'system';
+      return 'light';
+    });
+  };
+
+  useEffect(() => {
+    localStorage.setItem('proposala_theme_mode', themeMode);
+    const root = document.documentElement;
+    const body = document.body;
+
+    const applyTheme = () => {
+      const isDark =
+        themeMode === 'dark' ||
+        (themeMode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+      if (isDark) {
+        root.classList.add('dark');
+        body.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+        body.classList.remove('dark');
+      }
+    };
+
+    applyTheme();
+
+    if (themeMode === 'system' && window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const listener = () => applyTheme();
+      mediaQuery.addEventListener('change', listener);
+      return () => mediaQuery.removeEventListener('change', listener);
+    }
+  }, [themeMode]);
 
   // Modal / Slideover states
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -286,7 +340,7 @@ export const JobAnalyzerPage: React.FC = () => {
       setActiveNav('library');
     } else if (path === '/account') {
       setActiveNav('account');
-    } else if (path === '/proposals/new' || path.startsWith('/analyzer')) {
+    } else if (path === '/proposals/new' || path === '/proposal/new' || path.startsWith('/analyzer')) {
       setActiveNav('new');
     } else if (viewParam === 'profiles' || viewParam === 'profile') {
       setActiveNav('profiles');
@@ -882,7 +936,7 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {/* 1. SIDEBAR (Fixed Left, width 240px)      */}
       {/* ========================================== */}
-      <aside className={`w-[240px] bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 h-screen sticky top-0 z-40 transition-transform duration-200 ${
+      <aside className={`w-[240px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between shrink-0 h-screen sticky top-0 z-40 transition-transform duration-200 ${
         mobileMenuOpen ? 'fixed inset-y-0 left-0 translate-x-0' : 'hidden md:flex'
       }`}>
         
@@ -891,17 +945,17 @@ export const JobAnalyzerPage: React.FC = () => {
           {/* Brand Title */}
           <div className="flex items-center justify-between px-1 pt-1">
             <Link to="/dashboard" className="flex items-center gap-2 group">
-              <span className="text-base font-extrabold tracking-tight text-slate-900 font-mono">
+              <span className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white font-mono">
                 proposala
               </span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 font-mono font-bold uppercase">
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-mono font-bold uppercase">
                 /{activeNav}
               </span>
             </Link>
             {mobileMenuOpen && (
               <button 
                 onClick={() => setMobileMenuOpen(false)}
-                className="md:hidden text-slate-500 hover:text-slate-900 p-1 cursor-pointer"
+                className="md:hidden text-slate-500 hover:text-slate-900 dark:hover:text-white p-1 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -912,29 +966,29 @@ export const JobAnalyzerPage: React.FC = () => {
           <div className="relative font-mono">
             <button
               onClick={() => setIsWorkspaceOpen(!isWorkspaceOpen)}
-              className="w-full flex items-center justify-between p-2 rounded-sm bg-slate-50 border border-slate-200 hover:border-slate-300 text-xs text-left transition-colors cursor-pointer group shadow-2xs"
+              className="w-full flex items-center justify-between p-2 rounded-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-xs text-left transition-colors cursor-pointer group shadow-2xs"
             >
               <div className="flex items-center gap-2 truncate">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                <span className="font-semibold text-slate-900 truncate">{user?.email?.split('@')[0] || "salmanziachattha107"}'s workspace</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100 truncate">{user?.email?.split('@')[0] || "salmanziachattha107"}'s workspace</span>
               </div>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900 shrink-0 transition-transform" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white shrink-0 transition-transform" />
             </button>
 
             {/* Workspace Dropdown Menu */}
             {isWorkspaceOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-sm shadow-xl z-50 p-1 space-y-0.5 font-mono text-xs animate-in fade-in">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-xl z-50 p-1 space-y-0.5 font-mono text-xs animate-in fade-in">
                 <button
                   onClick={() => { setIsWorkspaceOpen(false); }}
-                  className="w-full text-left px-2.5 py-1.5 text-xs text-slate-900 hover:bg-slate-100 rounded-sm flex items-center justify-between font-medium cursor-pointer"
+                  className="w-full text-left px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm flex items-center justify-between font-medium cursor-pointer"
                 >
                   <span className="truncate">{user?.email?.split('@')[0] || "salmanziachattha107"}'s workspace</span>
-                  <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 </button>
-                <div className="border-t border-slate-100 my-1" />
+                <div className="border-t border-slate-100 dark:border-slate-700 my-1" />
                 <button
                   onClick={() => { setIsWorkspaceOpen(false); navigate('/account'); }}
-                  className="w-full text-left px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 rounded-sm flex items-center gap-1.5 font-semibold cursor-pointer"
+                  className="w-full text-left px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm flex items-center gap-1.5 font-semibold cursor-pointer"
                 >
                   <Settings className="w-3.5 h-3.5" />
                   <span>Workspace Settings</span>
@@ -948,7 +1002,7 @@ export const JobAnalyzerPage: React.FC = () => {
             
             {/* WORK Group */}
             <div className="space-y-1">
-              <div className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider px-2">Work</div>
+              <div className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">Work</div>
               
               <button
                 onClick={() => {
@@ -960,8 +1014,8 @@ export const JobAnalyzerPage: React.FC = () => {
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-sm transition-all cursor-pointer ${
                   activeNav === 'new'
-                    ? 'bg-slate-900 text-white font-bold'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <span>+ New proposal</span>
@@ -975,8 +1029,8 @@ export const JobAnalyzerPage: React.FC = () => {
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-sm transition-all cursor-pointer ${
                   activeNav === 'proposals'
-                    ? 'bg-slate-900 text-white font-bold'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <span>Proposals</span>
@@ -991,8 +1045,8 @@ export const JobAnalyzerPage: React.FC = () => {
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-sm transition-all cursor-pointer ${
                   activeNav === 'deal-center'
-                    ? 'bg-slate-900 text-white font-bold'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <span>Deal Center</span>
@@ -1002,7 +1056,7 @@ export const JobAnalyzerPage: React.FC = () => {
 
             {/* LIBRARY Group */}
             <div className="space-y-1">
-              <div className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider px-2">Library</div>
+              <div className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">Library</div>
 
               <button
                 onClick={() => {
@@ -1012,8 +1066,8 @@ export const JobAnalyzerPage: React.FC = () => {
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-sm transition-all cursor-pointer ${
                   activeNav === 'profiles'
-                    ? 'bg-slate-900 text-white font-bold'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <span>Profiles</span>
@@ -1028,8 +1082,8 @@ export const JobAnalyzerPage: React.FC = () => {
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-sm transition-all cursor-pointer ${
                   activeNav === 'library'
-                    ? 'bg-slate-900 text-white font-bold'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <span>Proposal library</span>
@@ -1038,7 +1092,7 @@ export const JobAnalyzerPage: React.FC = () => {
 
             {/* INSIGHTS Group */}
             <div className="space-y-1">
-              <div className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider px-2">Insights</div>
+              <div className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">Insights</div>
               <button
                 onClick={() => {
                   setActiveNav('dashboard');
@@ -1047,8 +1101,8 @@ export const JobAnalyzerPage: React.FC = () => {
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-sm transition-all cursor-pointer ${
                   activeNav === 'dashboard'
-                    ? 'bg-slate-900 text-white font-bold'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <span>Dashboard</span>
@@ -1057,18 +1111,18 @@ export const JobAnalyzerPage: React.FC = () => {
 
           </div>
 
-          {/* AI Credits Widget (Matching PDF Screenshots 14-17) */}
-          <div className="bg-slate-50 border border-slate-200 p-3 rounded-sm space-y-2 font-mono text-[11px] shadow-2xs mt-4">
-            <div className="flex items-center justify-between text-slate-700">
-              <span className="font-bold text-[10px] uppercase text-slate-500">AI CREDITS</span>
-              <span className="font-bold text-slate-900">405.8 / 560</span>
+          {/* AI Credits Widget */}
+          <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-3 rounded-sm space-y-2 font-mono text-[11px] shadow-2xs mt-4">
+            <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
+              <span className="font-bold text-[10px] uppercase text-slate-500 dark:text-slate-400">AI CREDITS</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">405.8 / 560</span>
             </div>
             
-            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
               <div className="bg-emerald-500 h-full w-[72.4%]" />
             </div>
 
-            <div className="flex items-center justify-between text-[10px] text-slate-500">
+            <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
               <span>154.2 used</span>
               <span>405.8 expire Aug 22</span>
             </div>
@@ -1077,18 +1131,18 @@ export const JobAnalyzerPage: React.FC = () => {
         </div>
 
         {/* Sidebar Bottom Section: Account */}
-        <div className="p-3 border-t border-slate-200 bg-white space-y-2 font-mono text-xs">
+        <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2 font-mono text-xs">
           <button
             onClick={() => setShowVideoModal(true)}
-            className="w-full py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 rounded-sm font-semibold flex items-center justify-center gap-1.5 text-xs cursor-pointer transition-colors"
+            className="w-full py-1.5 px-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-300 rounded-sm font-semibold flex items-center justify-center gap-1.5 text-xs cursor-pointer transition-colors"
           >
-            <Zap className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600/20" />
+            <Zap className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 fill-emerald-600/20" />
             <span>Watch demo video</span>
           </button>
 
           <div
             onClick={() => { setActiveNav('account'); navigate('/account'); }}
-            className="flex items-center justify-between p-2 rounded-sm bg-slate-50 border border-slate-200 hover:bg-slate-100 cursor-pointer transition-colors"
+            className="flex items-center justify-between p-2 rounded-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
           >
             <div className="flex items-center gap-2 truncate">
               <div className="w-7 h-7 rounded-sm bg-slate-900 text-white text-xs font-bold flex items-center justify-center shrink-0">
@@ -1119,68 +1173,47 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {/* 2. MAIN CONTENT AREA (Scrollable panel)    */}
       {/* ========================================== */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-slate-50">
+      <div ref={mainContentRef} className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-slate-50 dark:bg-slate-950 dark:text-slate-100">
         
-        {/* Proposala Terminal Top Header Bar - Plane Glass Bar Header */}
-        <header className="sticky top-0 z-30 bg-white/60 backdrop-blur-md border-b border-slate-200/50 px-4 sm:px-6 py-2.5 flex items-center justify-between text-slate-900 shrink-0 font-sans text-xs shadow-xs transition-all">
+        {/* Proposala Clean Header Bar */}
+        <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-4 sm:px-6 py-2.5 flex items-center justify-between text-slate-900 dark:text-slate-100 shrink-0 font-sans text-xs shadow-2xs transition-all">
+          
+          {/* Left: Web Name & Navigation Breadcrumb */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100/60 rounded-lg transition-colors"
+              className="md:hidden p-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-sm transition-colors cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2 bg-white/40 backdrop-blur-sm px-3 py-1 rounded-lg border border-slate-200/60 text-xs shadow-2xs">
-              <span className="text-slate-500 font-medium">{activeWorkspace}</span>
-              <span className="text-slate-300">/</span>
-              <span className="text-slate-900 font-semibold">Proposala</span>
-            </div>
-            <span className="text-emerald-700 bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 px-2.5 py-1 rounded-full text-[11px] font-medium tracking-wide flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              New Proposal
+            
+            <Link to="/dashboard" className="flex items-center gap-2 group">
+              <span className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white font-mono">
+                proposala
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </Link>
+
+            <span className="text-slate-300 dark:text-slate-700 font-mono text-xs">/</span>
+
+            <span className="text-[11px] font-mono font-semibold uppercase text-slate-500 dark:text-slate-400">
+              {activeNav}
             </span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-3 text-xs text-slate-500 font-sans">
-            {/* UI Density Controller Pill */}
-            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded border border-slate-200 font-mono text-[11px]">
-              <span className="text-slate-400 px-1 text-[10px] uppercase font-bold">Density:</span>
-              <button
-                onClick={() => handleDensityChange('compact')}
-                className={`px-2 py-0.5 rounded cursor-pointer font-semibold transition-all ${
-                  uiDensity === 'compact' ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Compact
-              </button>
-              <button
-                onClick={() => handleDensityChange('medium')}
-                className={`px-2 py-0.5 rounded cursor-pointer font-semibold transition-all ${
-                  uiDensity === 'medium' ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Medium
-              </button>
-              <button
-                onClick={() => handleDensityChange('standard')}
-                className={`px-2 py-0.5 rounded cursor-pointer font-semibold transition-all ${
-                  uiDensity === 'standard' ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Standard
-              </button>
-            </div>
-
-            <span className="bg-white/40 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-200/50 text-slate-600 font-mono text-[11px]">{utcTime}</span>
-            <span className="text-slate-300">|</span>
-            <div className="flex items-center gap-2">
-              <span className="text-emerald-600 font-semibold font-mono text-[11px]">0 5193071</span>
-              <span className="text-emerald-700 border border-emerald-500/20 px-2.5 py-0.5 rounded-full bg-emerald-500/10 font-medium text-[11px]">
-                Fit Saved →
-              </span>
-              <span className="text-slate-500 font-medium text-[11px]">31 Saved</span>
-            </div>
+          {/* Right: Single Mode Toggle Button (Cycles Light -> Dark -> System on click) */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={cycleThemeMode}
+              title={`Mode: ${themeMode === 'light' ? 'Light' : themeMode === 'dark' ? 'Dark' : 'System'} (Click to cycle)`}
+              className="p-2 rounded-sm bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 transition-all cursor-pointer shadow-2xs"
+            >
+              {themeMode === 'light' && <Sun className="w-4 h-4 text-amber-500" />}
+              {themeMode === 'dark' && <Moon className="w-4 h-4 text-indigo-400" />}
+              {themeMode === 'system' && <Monitor className="w-4 h-4 text-emerald-500" />}
+            </button>
           </div>
+
         </header>
 
         {/* Offline Banner Alert */}
@@ -1264,11 +1297,11 @@ export const JobAnalyzerPage: React.FC = () => {
             <div className="lg:col-span-5 space-y-4">
               
               {/* FIELD 01: YOUR PROFILE */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-400 font-bold">field . 01</span>
-                    <span className="text-slate-900 font-bold tracking-wider uppercase">YOUR PROFILE</span>
+                    <span className="text-slate-400 dark:text-slate-500 font-bold">field . 01</span>
+                    <span className="text-slate-900 dark:text-slate-100 font-bold tracking-wider uppercase">YOUR PROFILE</span>
                   </div>
                   <button
                     onClick={openProfilesModal}
@@ -1284,7 +1317,7 @@ export const JobAnalyzerPage: React.FC = () => {
                     setSelectedProfile(e.target.value);
                     addToast(`Selected profile: ${e.target.value}`, 'info');
                   }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs p-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs p-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
                 >
                   <option value="Hanif Khan">Hanif Khan — 2D Motion Graphics & Vector Designer | Brand & UI</option>
                   <option value="Abbas">Abbas — Bookkeeper & Accountant | Bank Reconciliation</option>
@@ -1298,11 +1331,11 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
 
               {/* FIELD 02: DEPARTMENT */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-400 font-bold">field . 02</span>
-                    <span className="text-slate-900 font-bold tracking-wider uppercase">DEPARTMENT</span>
+                    <span className="text-slate-400 dark:text-slate-500 font-bold">field . 02</span>
+                    <span className="text-slate-900 dark:text-slate-100 font-bold tracking-wider uppercase">DEPARTMENT</span>
                   </div>
                   <button
                     onClick={() => addToast('Department manager open', 'info')}
@@ -1318,7 +1351,7 @@ export const JobAnalyzerPage: React.FC = () => {
                     setSelectedDept(e.target.value);
                     addToast(`Filter department: ${e.target.value}`, 'info');
                   }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs p-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs p-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
                 >
                   <option value="All departments">All departments (no filter)</option>
                   <option value="AI Automation">AI Automation</option>
@@ -1333,11 +1366,11 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
 
               {/* FIELD 03: JOB POSTING */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-400 font-bold">field . 03</span>
-                    <span className="text-slate-900 font-bold tracking-wider uppercase">JOB POSTING</span>
+                    <span className="text-slate-400 dark:text-slate-500 font-bold">field . 03</span>
+                    <span className="text-slate-900 dark:text-slate-100 font-bold tracking-wider uppercase">JOB POSTING</span>
                   </div>
                   <button
                     onClick={() => {
@@ -1360,28 +1393,28 @@ export const JobAnalyzerPage: React.FC = () => {
                     if (selectedSampleId !== 'custom') setSelectedSampleId('custom');
                   }}
                   placeholder="Paste the full post - title, body, client stats, budget line..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs p-3 text-slate-900 placeholder-gray-500 focus:outline-none focus:border-emerald-500 font-sans leading-relaxed resize-none"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs p-3 text-slate-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-sans leading-relaxed resize-none"
                 />
                 
-                <div className="text-[10px] text-slate-400 font-mono">
+                <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
                   {jobInputText.length} chars
                 </div>
               </div>
 
               {/* FIELD 04: ENGLISH LEVEL */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-400 font-bold">field . 04</span>
-                    <span className="text-slate-900 font-bold tracking-wider uppercase">ENGLISH LEVEL</span>
+                    <span className="text-slate-400 dark:text-slate-500 font-bold">field . 04</span>
+                    <span className="text-slate-900 dark:text-slate-100 font-bold tracking-wider uppercase">ENGLISH LEVEL</span>
                   </div>
-                  <span className="text-[10px] text-slate-400">applies to every generated candidate</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">applies to every generated candidate</span>
                 </div>
 
                 <select
                   value={englishLevel}
                   onChange={(e) => setEnglishLevel(e.target.value as any)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs p-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs p-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
                 >
                   <option value="Basic (ESL, short sentences)">Basic (ESL, short sentences)</option>
                   <option value="Average (competent non-native)">Average (competent non-native)</option>
@@ -1395,13 +1428,13 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
 
               {/* FIELD 05: PROPOSAL LENGTH */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-400 font-bold">field . 05</span>
-                    <span className="text-slate-900 font-bold tracking-wider uppercase">PROPOSAL LENGTH</span>
+                    <span className="text-slate-400 dark:text-slate-500 font-bold">field . 05</span>
+                    <span className="text-slate-900 dark:text-slate-100 font-bold tracking-wider uppercase">PROPOSAL LENGTH</span>
                   </div>
-                  <span className="text-[10px] text-slate-400">Medium - max after scoring</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">Medium - max after scoring</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
@@ -1416,7 +1449,7 @@ export const JobAnalyzerPage: React.FC = () => {
                       className={`p-2 rounded-lg border text-left cursor-pointer transition-all ${
                         proposalLength === item.id
                           ? 'bg-emerald-950/40 border-emerald-500 text-emerald-300'
-                          : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-gray-600'
+                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-gray-600 dark:hover:border-slate-600'
                       }`}
                     >
                       <div className="text-xs font-bold font-mono">{item.label}</div>
@@ -1427,26 +1460,26 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
 
               {/* FIELD 06: MODEL */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-400 font-bold">field . 06</span>
-                    <span className="text-slate-900 font-bold tracking-wider uppercase">MODEL</span>
+                    <span className="text-slate-400 dark:text-slate-500 font-bold">field . 06</span>
+                    <span className="text-slate-900 dark:text-slate-100 font-bold tracking-wider uppercase">MODEL</span>
                   </div>
-                  <span className="text-[10px] text-slate-400">DEFAULTS -&gt;</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">DEFAULTS -&gt;</span>
                 </div>
 
                 <select
                   value={aiModel}
                   onChange={(e) => setAiModel(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs p-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs p-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
                 >
                   <option value="Claude Sonnet 4.6">Claude Sonnet 4.6</option>
                   <option value="Gemini 2.5 Flash">Gemini 2.5 Flash</option>
                   <option value="GPT-4o">GPT-4o</option>
                 </select>
 
-                <p className="text-[10px] text-slate-400">
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">
                   Used for extraction, generation, rewrites, and application answers on this run.
                 </p>
               </div>
@@ -1478,14 +1511,14 @@ export const JobAnalyzerPage: React.FC = () => {
             <div className="lg:col-span-7 space-y-4">
               
               {/* FIT SCORE BADGE CARD */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-slate-500 font-bold uppercase">FIT</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">FIT</span>
                   <div className="flex items-center gap-2">
                     <span className="text-base font-extrabold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded">
                       Good 82.3 / 100
                     </span>
-                    <span className="text-[11px] text-slate-500">Full 40-minute process.</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">Full 40-minute process.</span>
                   </div>
                 </div>
 
@@ -1498,11 +1531,11 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
 
               {/* PROOF TO USE SECTION */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between text-xs">
                   <div>
-                    <span className="text-slate-900 font-bold tracking-wider uppercase">Proof to use</span>
-                    <span className="text-slate-400 ml-2">5/5 selected</span>
+                    <span className="text-slate-900 dark:text-slate-100 font-bold tracking-wider uppercase">Proof to use</span>
+                    <span className="text-slate-400 dark:text-slate-500 ml-2">5/5 selected</span>
                   </div>
                   <button
                     onClick={() => setShowCaseStudyDrawer(true)}
@@ -1512,7 +1545,7 @@ export const JobAnalyzerPage: React.FC = () => {
                   </button>
                 </div>
 
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Retrieval proof is selected by default. Swap it before generation when another use case fits better.
                 </p>
 
@@ -1521,21 +1554,21 @@ export const JobAnalyzerPage: React.FC = () => {
                   {portfolioProjects.map((project) => (
                     <div
                       key={project.id}
-                      className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex items-start justify-between gap-3 text-xs"
+                      className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg p-3 flex items-start justify-between gap-3 text-xs"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[9px] font-bold uppercase">
                             CASE STUDY
                           </span>
-                          <span className="text-slate-900 font-semibold">{project.title}</span>
+                          <span className="text-slate-900 dark:text-slate-100 font-semibold">{project.title}</span>
                         </div>
-                        <p className="text-[11px] text-slate-500 leading-snug">{project.summary}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">{project.summary}</p>
                       </div>
 
                       <button
                         onClick={() => handleRemoveProof(project.id)}
-                        className="text-slate-400 hover:text-red-400 p-1 cursor-pointer shrink-0"
+                        className="text-slate-400 dark:text-slate-500 hover:text-red-400 p-1 cursor-pointer shrink-0"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -1545,27 +1578,27 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
 
               {/* SHAPES TO USE SECTION */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between text-xs">
                   <div>
-                    <span className="text-slate-900 font-bold tracking-wider uppercase">Shapes to use</span>
-                    <span className="text-slate-400 ml-2">1 variant</span>
+                    <span className="text-slate-900 dark:text-slate-100 font-bold tracking-wider uppercase">Shapes to use</span>
+                    <span className="text-slate-400 dark:text-slate-500 ml-2">1 variant</span>
                   </div>
-                  <span className="text-[10px] text-slate-400">TONE: NEUTRAL ORDER: STANDARD</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">TONE: NEUTRAL ORDER: STANDARD</span>
                 </div>
 
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   These planned structures will guide the draft variants.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   {/* OPENER */}
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-500 block uppercase font-bold">OPENER</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block uppercase font-bold">OPENER</span>
                     <select
                       value={openerShape}
                       onChange={(e) => setOpenerShape(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-800 text-xs focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded p-2 text-slate-800 dark:text-slate-200 text-xs focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
                     >
                       <option value="Dubai scene to mirror pivot">Dubai scene to mirror pivot - Story opener</option>
                       <option value="Blunt claim, no preamble">Blunt claim, no preamble - Direct opener</option>
@@ -1576,11 +1609,11 @@ export const JobAnalyzerPage: React.FC = () => {
 
                   {/* MIDDLE */}
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-500 block uppercase font-bold">MIDDLE</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block uppercase font-bold">MIDDLE</span>
                     <select
                       value={middleShape}
                       onChange={(e) => setMiddleShape(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-800 text-xs focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded p-2 text-slate-800 dark:text-slate-200 text-xs focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
                     >
                       <option value="Week-by-week SOW">Week-by-week SOW - Phased SOW</option>
                       <option value="Do this first">Do this first - First milestone</option>
@@ -1591,11 +1624,11 @@ export const JobAnalyzerPage: React.FC = () => {
 
                   {/* CLOSE */}
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-500 block uppercase font-bold">CLOSE</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block uppercase font-bold">CLOSE</span>
                     <select
                       value={closeShape}
                       onChange={(e) => setCloseShape(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-800 text-xs focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded p-2 text-slate-800 dark:text-slate-200 text-xs focus:outline-none focus:border-emerald-500 cursor-pointer font-sans"
                     >
                       <option value="Phased-pricing tease">Phased-pricing tease - Phased-pricing tease close</option>
                       <option value="Direct booking ask">Direct booking ask - Direct ask close</option>
@@ -1609,180 +1642,80 @@ export const JobAnalyzerPage: React.FC = () => {
                 <button
                   onClick={handleGenerateDraft}
                   disabled={isGeneratingDraft}
-                  className="w-full bg-white hover:bg-gray-100 text-black py-3 px-4 rounded-xl text-xs font-black tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50 transition-all mt-2"
+                  className="w-full bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 py-3 px-4 rounded-xl text-xs font-black tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50 transition-all mt-2"
                 >
                   {isGeneratingDraft ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                      <RefreshCw className="w-4 h-4 animate-spin text-emerald-400 dark:text-emerald-600" />
                       <span>Synthesizing Draft...</span>
                     </>
                   ) : (
                     <>
-                      <Zap className="w-4 h-4 text-black fill-black" />
+                      <Zap className="w-4 h-4 text-emerald-400 dark:text-emerald-600 fill-current" />
                       <span>Generate draft</span>
                     </>
                   )}
                 </button>
               </div>
+
+              {/* ========================================================= */}
+              {/* DRAFT EDITOR (FINAL STATE OUTPUT PANEL) - BELOW SHAPES   */}
+              {/* ========================================================= */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 space-y-4 shadow-xl">
+                
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-emerald-400" />
+                      <span>Proposal Draft & Rich Editor</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      AI-synthesized human-tone proposal based on your selected shapes, profile, and case study proofs.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Minimalist Rich Editor */}
+                <div className="space-y-2 relative">
+                  {isRefiningAI && (
+                    <div className="absolute inset-0 bg-slate-50/70 dark:bg-slate-900/70 backdrop-blur-xs rounded-lg z-10 flex items-center justify-center gap-2 text-emerald-400 font-mono text-xs">
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Refining draft tone with Gemini...</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono px-1">
+                    <span>FORMATTED PROPOSAL CONTENT</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                      {wordCount} words • {charCount} characters • ~{readingTimeSec}s read time
+                    </span>
+                  </div>
+
+                  <textarea
+                    rows={10}
+                    value={editedProposalText}
+                    onChange={(e) => setEditedProposalText(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs sm:text-sm p-4 text-slate-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-sans leading-relaxed transition-all resize-none shadow-inner"
+                  />
+                </div>
+
+                {/* Bottom Status Tip */}
+                <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1 gap-2">
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-[11px]">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span>Zero AI fluff phrases detected (No "Dear Hiring Manager", "I am a passionate...")</span>
+                  </div>
+
+                  <div className="text-slate-400 dark:text-slate-500 text-[11px]">
+                    Ready to submit on Upwork proposal page
+                  </div>
+                </div>
+
+              </div>
+
             </div>
           </div>
-
-          {/* ========================================================= */}
-          {/* 3. DRAFT EDITOR (FINAL STATE OUTPUT PANEL)                */}
-          {/* ========================================================= */}
-          <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 space-y-4 shadow-xl">
-            
-            {/* Header, Draft Tabs, and Actions Bar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-slate-200">
-              
-              <div>
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-emerald-400" />
-                  <span>Proposal Draft & Rich Editor</span>
-                </h3>
-                <p className="text-xs text-slate-500">
-                  AI-synthesized human-tone proposal based on your selected shapes, profile, and case study proofs.
-                </p>
-              </div>
-
-              {/* Draft Style Tab Switcher */}
-              <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
-                {(['Direct & Short', 'Value Focused', 'Detailed'] as const).map((style) => (
-                  <button
-                    key={style}
-                    onClick={() => handleTabChange(style)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
-                      draftStyle === style
-                        ? 'bg-slate-100 text-slate-900 font-semibold shadow-xs'
-                        : 'text-slate-500 hover:text-slate-800'
-                    }`}
-                  >
-                    {style}
-                  </button>
-                ))}
-              </div>
-
-              {/* Actions: Status Dropdown & Copy Draft Button */}
-              <div className="flex items-center gap-2.5">
-                
-                {/* Status Selector Dropdown */}
-                <select
-                  value={proposalStatus}
-                  onChange={(e) => handleStatusChange(e.target.value as any)}
-                  className="bg-slate-50 border border-slate-200 text-xs text-slate-800 rounded-lg px-2.5 py-2 font-mono font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                >
-                  <option value="Draft">Status: Draft</option>
-                  <option value="Sent">Status: Sent</option>
-                  <option value="Replied">Status: Replied</option>
-                  <option value="Won">Status: Won 🎉</option>
-                  <option value="Lost">Status: Lost</option>
-                </select>
-
-                {/* Copy Draft Button */}
-                <button
-                  onClick={handleCopy}
-                  className="bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 text-slate-900 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-4 h-4 text-emerald-200" />
-                      <span>Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4 text-slate-900" />
-                      <span>Copy Draft</span>
-                    </>
-                  )}
-                </button>
-
-              </div>
-
-            </div>
-
-            {/* Inline AI Quick Actions Bar */}
-            <div className="bg-slate-50 p-2 rounded-lg border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-1.5 text-slate-500 font-mono text-[11px] font-semibold">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                <span>AI QUICK REFINE:</span>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-1.5">
-                <button
-                  onClick={() => handleAIRefine('shorter')}
-                  disabled={isRefiningAI}
-                  className="px-2.5 py-1 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                >
-                  <Zap className="w-3 h-3 text-amber-400" />
-                  <span>Make Shorter</span>
-                </button>
-
-                <button
-                  onClick={() => handleAIRefine('professional')}
-                  disabled={isRefiningAI}
-                  className="px-2.5 py-1 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                >
-                  <ShieldCheck className="w-3 h-3 text-blue-400" />
-                  <span>More Professional</span>
-                </button>
-
-                <button
-                  onClick={() => handleAIRefine('pastwork')}
-                  disabled={isRefiningAI}
-                  className="px-2.5 py-1 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                >
-                  <FolderGit2 className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Emphasize Past Work</span>
-                </button>
-
-                <button
-                  onClick={() => handleAIRefine('question')}
-                  disabled={isRefiningAI}
-                  className="px-2.5 py-1 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                >
-                  <HelpCircle className="w-3 h-3 text-purple-400" />
-                  <span>Add Closing Question</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Minimalist Rich Editor */}
-            <div className="space-y-2 relative">
-              {isRefiningAI && (
-                <div className="absolute inset-0 bg-slate-50/70 backdrop-blur-xs rounded-lg z-10 flex items-center justify-center gap-2 text-emerald-400 font-mono text-xs">
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Refining draft tone with Gemini...</span>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono px-1">
-                <span>FORMATTED PROPOSAL CONTENT</span>
-                <span className="text-slate-700 font-semibold">
-                  {wordCount} words • {charCount} characters • ~{readingTimeSec}s read time
-                </span>
-              </div>
-
-              <textarea
-                rows={10}
-                value={editedProposalText}
-                onChange={(e) => setEditedProposalText(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs sm:text-sm p-4 text-slate-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-sans leading-relaxed transition-all resize-none shadow-inner"
-              />
-            </div>
-
-            {/* Bottom Status Tip */}
-            <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 pt-1 gap-2">
-              <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-[11px]">
-                <CheckCircle className="w-3.5 h-3.5" />
-                <span>Zero AI fluff phrases detected (No "Dear Hiring Manager", "I am a passionate...")</span>
-              </div>
-
-              <div className="text-slate-400 text-[11px]">
-                Ready to submit on Upwork proposal page
-              </div>
-            </div>
-
-          </section>
             </React.Fragment>
           )}
 
@@ -1798,19 +1731,19 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {showScoreModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-6 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-emerald-400" />
                   <span>Granular Score & Fit Breakdown</span>
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Detailed evaluation across the 5 core proposal winning vectors.
                 </p>
               </div>
-              <button onClick={() => setShowScoreModal(false)} className="text-slate-500 hover:text-slate-900 p-1">
+              <button onClick={() => setShowScoreModal(false)} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1840,71 +1773,71 @@ export const JobAnalyzerPage: React.FC = () => {
             <div className="space-y-3 text-xs">
               
               {/* 1. Budget Fit */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between font-semibold text-slate-900">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400" />
                     <span>Budget Fit & Rate Alignment</span>
                   </span>
                   <span className="font-mono text-emerald-400 font-bold">{radarScores.budget}/100</span>
                 </div>
-                <p className="text-slate-500 leading-relaxed">
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
                   Client posted budget ($1,500 - $3,000) aligns cleanly with target developer rates ($60-$90/hr). Low price negotiation risk.
                 </p>
               </div>
 
               {/* 2. Skill Match */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between font-semibold text-slate-900">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-blue-400" />
                     <span>Skill Stack Compatibility</span>
                   </span>
                   <span className="font-mono text-blue-400 font-bold">{radarScores.skills}/100</span>
                 </div>
-                <p className="text-slate-500 leading-relaxed">
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
                   Required technologies (React 18, TypeScript, Tailwind, Node.js) match 100% of your primary technical profile.
                 </p>
               </div>
 
               {/* 3. Client History */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between font-semibold text-slate-900">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-purple-400" />
                     <span>Client Hiring History & Payment Verification</span>
                   </span>
                   <span className="font-mono text-purple-400 font-bold">{radarScores.clientHistory}/100</span>
                 </div>
-                <p className="text-slate-500 leading-relaxed">
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
                   Verified payment method with $85,000+ total spent across 24 hires. Average rating: 5.0 stars. Fast response window.
                 </p>
               </div>
 
               {/* 4. Competition Density */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between font-semibold text-slate-900">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-amber-400" />
                     <span>Competition Density</span>
                   </span>
                   <span className="font-mono text-amber-400 font-bold">{radarScores.competition}/100</span>
                 </div>
-                <p className="text-slate-500 leading-relaxed">
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
                   15-20 proposals submitted. Applying within the first 2 hours yields 4.2x higher client view rate.
                 </p>
               </div>
 
               {/* 5. Risk Audit */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between font-semibold text-slate-900">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400" />
                     <span>Low Risk Assessment</span>
                   </span>
                   <span className="font-mono text-emerald-400 font-bold">{radarScores.risk}/100</span>
                 </div>
-                <p className="text-slate-500 leading-relaxed">
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
                   Zero red flags detected in job text. Scope is well-defined with measurable milestone deliverables.
                 </p>
               </div>
@@ -1929,33 +1862,33 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {showCaseStudyDrawer && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex justify-end">
-          <div className="w-full max-w-md bg-white border-l border-slate-200 h-full p-6 flex flex-col justify-between space-y-4 animate-in slide-in-from-right duration-200 overflow-y-auto">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 h-full p-6 flex flex-col justify-between space-y-4 animate-in slide-in-from-right duration-200 overflow-y-auto">
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <FolderGit2 className="w-4 h-4 text-emerald-400" />
                     <span>Select Case Study</span>
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Pick a project from your portfolio bank to quote in this proposal.
                   </p>
                 </div>
-                <button onClick={() => setShowCaseStudyDrawer(false)} className="text-slate-500 hover:text-slate-900 p-1">
+                <button onClick={() => setShowCaseStudyDrawer(false)} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Search filter */}
               <div className="relative">
-                <Search className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                <Search className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute left-3 top-3" />
                 <input
                   type="text"
                   value={caseStudySearch}
                   onChange={(e) => setCaseStudySearch(e.target.value)}
                   placeholder="Filter case studies by tech or industry..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs pl-9 pr-3 py-2.5 text-slate-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs pl-9 pr-3 py-2.5 text-slate-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
@@ -1970,11 +1903,11 @@ export const JobAnalyzerPage: React.FC = () => {
                       className={`p-4 rounded-xl border text-xs space-y-2 cursor-pointer transition-all ${
                         selectedPortfolioId === project.id
                           ? 'bg-emerald-950/40 border-emerald-500/60 ring-1 ring-emerald-500/40'
-                          : 'bg-slate-50 border-slate-200 hover:border-gray-600'
+                          : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-gray-600 dark:hover:border-slate-600'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-900 text-sm truncate max-w-[220px]">{project.title}</span>
+                        <span className="font-bold text-slate-900 dark:text-white text-sm truncate max-w-[220px]">{project.title}</span>
                         {selectedPortfolioId === project.id && (
                           <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500 text-slate-950 font-bold">
                             Active
@@ -1982,13 +1915,13 @@ export const JobAnalyzerPage: React.FC = () => {
                         )}
                       </div>
                       
-                      <p className="text-slate-500 text-[11px] leading-relaxed line-clamp-2">
+                      <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed line-clamp-2">
                         {project.summary}
                       </p>
 
                       <div className="flex flex-wrap gap-1 pt-1">
                         {project.techStack.slice(0, 4).map((tech, i) => (
-                          <span key={i} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-mono">
+                          <span key={i} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono">
                             {tech}
                           </span>
                         ))}
@@ -2002,7 +1935,7 @@ export const JobAnalyzerPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-200">
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => setShowNewPortfolioModal(true)}
                 className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-900 font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
@@ -2021,21 +1954,21 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {showHistoryModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex justify-end">
-          <div className="w-full max-w-2xl bg-white border-l border-slate-200 h-full p-6 flex flex-col justify-between space-y-4 animate-in slide-in-from-right duration-200 overflow-y-auto">
+          <div className="w-full max-w-2xl bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 h-full p-6 flex flex-col justify-between space-y-4 animate-in slide-in-from-right duration-200 overflow-y-auto">
             
             <div className="space-y-4">
               
-              <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <History className="w-4 h-4 text-emerald-400" />
                     <span>Proposals History & Data Table</span>
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Search, filter, export, or reload past proposal drafts.
                   </p>
                 </div>
-                <button onClick={() => setShowHistoryModal(false)} className="text-slate-500 hover:text-slate-900 p-1">
+                <button onClick={() => setShowHistoryModal(false)} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -2045,18 +1978,18 @@ export const JobAnalyzerPage: React.FC = () => {
                 
                 {/* Search Bar */}
                 <div className="relative flex-1 w-full">
-                  <Search className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                  <Search className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute left-3 top-3" />
                   <input
                     type="text"
                     value={historySearchQuery}
                     onChange={(e) => setHistorySearchQuery(e.target.value)}
                     placeholder="Search by job title or client name..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs pl-9 pr-3 py-2.5 text-slate-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs pl-9 pr-3 py-2.5 text-slate-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
 
                 {/* Filter Tab Switcher */}
-                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200 shrink-0 w-full sm:w-auto">
+                <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0 w-full sm:w-auto">
                   {(['All', 'In Progress', 'Won', 'Archived'] as const).map((tab) => (
                     <button
                       key={tab}
@@ -2064,7 +1997,7 @@ export const JobAnalyzerPage: React.FC = () => {
                       className={`px-2.5 py-1.5 rounded text-[11px] font-medium transition-all cursor-pointer ${
                         historyFilterTab === tab
                           ? 'bg-emerald-600 text-slate-900 font-semibold'
-                          : 'text-slate-500 hover:text-slate-900'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       {tab}
@@ -2084,7 +2017,7 @@ export const JobAnalyzerPage: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleExportJSON}
-                      className="px-2.5 py-1 rounded bg-slate-50 hover:bg-slate-50 border border-slate-200 text-slate-900 text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1 rounded bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
                     >
                       <Download className="w-3 h-3 text-emerald-400" />
                       <span>JSON</span>
@@ -2092,7 +2025,7 @@ export const JobAnalyzerPage: React.FC = () => {
 
                     <button
                       onClick={handleExportCSV}
-                      className="px-2.5 py-1 rounded bg-slate-50 hover:bg-slate-50 border border-slate-200 text-slate-900 text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1 rounded bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
                     >
                       <FileSpreadsheet className="w-3 h-3 text-blue-400" />
                       <span>CSV</span>
@@ -2110,16 +2043,16 @@ export const JobAnalyzerPage: React.FC = () => {
               )}
 
               {/* Proposals History Table */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
-                <table className="w-full text-left text-xs text-slate-700">
-                  <thead className="bg-slate-50 text-slate-500 uppercase font-mono text-[10px] border-b border-slate-200">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-900">
+                <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                  <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase font-mono text-[10px] border-b border-slate-200 dark:border-slate-700">
                     <tr>
                       <th className="p-3 w-8">
                         <input
                           type="checkbox"
                           checked={selectedHistoryIds.length === filteredHistory.length && filteredHistory.length > 0}
                           onChange={handleSelectAllHistory}
-                          className="rounded border-gray-700 text-emerald-500 focus:ring-emerald-500 bg-slate-50"
+                          className="rounded border-gray-700 text-emerald-500 focus:ring-emerald-500 bg-slate-50 dark:bg-slate-800"
                         />
                       </th>
                       <th className="p-3">Job Title & Client</th>
@@ -2128,10 +2061,10 @@ export const JobAnalyzerPage: React.FC = () => {
                       <th className="p-3">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                     {filteredHistory.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="p-6 text-center text-slate-400 text-xs">
+                        <td colSpan={5} className="p-6 text-center text-slate-400 dark:text-slate-500 text-xs">
                           No proposals found matching search criteria.
                         </td>
                       </tr>
@@ -2139,18 +2072,18 @@ export const JobAnalyzerPage: React.FC = () => {
                       filteredHistory.map((item) => (
                         <tr 
                           key={item.id}
-                          className="hover:bg-slate-100/40 transition-colors group cursor-pointer"
+                          className="hover:bg-slate-100/40 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
                         >
                           <td className="p-3">
                             <input
                               type="checkbox"
                               checked={selectedHistoryIds.includes(item.id)}
                               onChange={() => handleToggleHistorySelect(item.id)}
-                              className="rounded border-gray-700 text-emerald-500 focus:ring-emerald-500 bg-slate-50"
+                              className="rounded border-gray-700 text-emerald-500 focus:ring-emerald-500 bg-slate-50 dark:bg-slate-800"
                             />
                           </td>
                           <td 
-                            className="p-3 font-medium text-slate-900 max-w-[200px] truncate"
+                            className="p-3 font-medium text-slate-900 dark:text-white max-w-[200px] truncate"
                             onClick={() => {
                               setSelectedSampleId('custom');
                               setJobInputText(`${item.title}\n\nReopened proposal history draft.`);
@@ -2158,13 +2091,13 @@ export const JobAnalyzerPage: React.FC = () => {
                               addToast(`Reopened proposal draft for "${item.title}".`, 'info');
                             }}
                           >
-                            <div className="truncate group-hover:text-emerald-300 transition-colors">{item.title}</div>
-                            <div className="text-[10px] text-slate-400 font-mono truncate">{item.clientName || 'Upwork Client'}</div>
+                            <div className="truncate group-hover:text-emerald-400 transition-colors">{item.title}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono truncate">{item.clientName || 'Upwork Client'}</div>
                           </td>
                           <td className="p-3 font-mono font-bold text-emerald-400">
                             {item.score}/100
                           </td>
-                          <td className="p-3 font-mono text-[11px] text-slate-500">
+                          <td className="p-3 font-mono text-[11px] text-slate-500 dark:text-slate-400">
                             {item.date}
                           </td>
                           <td className="p-3">
@@ -2172,7 +2105,7 @@ export const JobAnalyzerPage: React.FC = () => {
                               item.status === 'Won' ? 'bg-purple-950 text-purple-300 border border-purple-800/40' :
                               item.status === 'Replied' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/40' :
                               item.status === 'Sent' ? 'bg-blue-950 text-blue-300 border border-blue-800/40' :
-                              'bg-slate-100 text-slate-700'
+                              'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                             }`}>
                               {item.status}
                             </span>
@@ -2188,7 +2121,7 @@ export const JobAnalyzerPage: React.FC = () => {
 
             <button
               onClick={() => setShowHistoryModal(false)}
-              className="w-full py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-900 text-xs font-semibold"
+              className="w-full py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-xs font-semibold cursor-pointer"
             >
               Close Proposals History
             </button>
@@ -2201,14 +2134,14 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {showNewPortfolioModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl p-6 space-y-5 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-5 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <FolderGit2 className="w-4 h-4 text-emerald-400" />
                 <span>Add Portfolio Case Study</span>
               </h3>
-              <button onClick={() => setShowNewPortfolioModal(false)} className="text-slate-500 hover:text-slate-900 p-1">
+              <button onClick={() => setShowNewPortfolioModal(false)} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -2221,61 +2154,61 @@ export const JobAnalyzerPage: React.FC = () => {
 
             <form onSubmit={handleCreatePortfolioItem} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">Project Title *</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Project Title *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Enterprise Stripe Payment & Billing Overhaul"
                   value={newProjectForm.title}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, title: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-slate-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Industry</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Industry</label>
                   <input
                     type="text"
                     placeholder="e.g. SaaS / FinTech"
                     value={newProjectForm.clientIndustry}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, clientIndustry: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-slate-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Tech Stack (comma separated) *</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Tech Stack (comma separated) *</label>
                   <input
                     type="text"
                     required
                     placeholder="React, TypeScript, Node, Stripe"
                     value={newProjectForm.techStackStr}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, techStackStr: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-slate-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">Project Summary *</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Project Summary *</label>
                 <textarea
                   rows={3}
                   required
                   placeholder="Briefly describe what problem you solved for the client..."
                   value={newProjectForm.summary}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, summary: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-slate-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">Key Metrics / Numbers Achieved</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Key Metrics / Numbers Achieved</label>
                 <input
                   type="text"
                   placeholder="e.g. -74% load latency, +32% conversion boost"
                   value={newProjectForm.metrics}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, metrics: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-slate-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
@@ -2283,7 +2216,7 @@ export const JobAnalyzerPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowNewPortfolioModal(false)}
-                  className="px-4 py-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold"
+                  className="px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -2309,28 +2242,28 @@ export const JobAnalyzerPage: React.FC = () => {
             if (e.target === e.currentTarget) closeProfilesModal();
           }}
         >
-          <div className="w-full max-w-xl bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-2xl animate-in zoom-in-95 max-h-[85vh] flex flex-col overflow-hidden">
+          <div className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl animate-in zoom-in-95 max-h-[85vh] flex flex-col overflow-hidden">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3 shrink-0">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-emerald-950/80 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-slate-900">Profiles & Workspace</h3>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Profiles & Workspace</h3>
                     <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                       URL: ?view=profiles
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500">In-place profiles management with active URL sync</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">In-place profiles management with active URL sync</p>
                 </div>
               </div>
               <button 
                 onClick={closeProfilesModal} 
-                className="text-slate-500 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 title="Close and clean URL"
               >
                 <X className="w-5 h-5" />
@@ -2338,13 +2271,13 @@ export const JobAnalyzerPage: React.FC = () => {
             </div>
 
             {/* In-Modal Navigation Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono shrink-0">
+            <div className="flex items-center gap-1 p-1 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono shrink-0">
               <button
                 onClick={() => setProfilesModalTab("profiles")}
                 className={`flex-1 py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   profilesModalTab === "profiles"
-                    ? "bg-slate-100 text-slate-900 shadow-xs border border-slate-300"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs border border-slate-300 dark:border-slate-600"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                 }`}
               >
                 <Sliders className="w-3.5 h-3.5 text-emerald-400" />
@@ -2354,8 +2287,8 @@ export const JobAnalyzerPage: React.FC = () => {
                 onClick={() => setProfilesModalTab("team")}
                 className={`flex-1 py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   profilesModalTab === "team"
-                    ? "bg-slate-100 text-slate-900 shadow-xs border border-slate-300"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs border border-slate-300 dark:border-slate-600"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                 }`}
               >
                 <Users className="w-3.5 h-3.5 text-blue-400" />
@@ -2365,8 +2298,8 @@ export const JobAnalyzerPage: React.FC = () => {
                 onClick={() => setProfilesModalTab("portfolio")}
                 className={`flex-1 py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   profilesModalTab === "portfolio"
-                    ? "bg-slate-100 text-slate-900 shadow-xs border border-slate-300"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs border border-slate-300 dark:border-slate-600"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                 }`}
               >
                 <FolderGit2 className="w-3.5 h-3.5 text-indigo-400" />
@@ -2380,7 +2313,7 @@ export const JobAnalyzerPage: React.FC = () => {
               {/* TAB 1: ACTIVE TECHNICAL PROFILES */}
               {profilesModalTab === "profiles" && (
                 <div className="space-y-3">
-                  <div className="text-[11px] text-slate-500 font-mono flex items-center justify-between">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono flex items-center justify-between">
                     <span>SELECT ACTIVE PROPOSALA PROFILE</span>
                     <span className="text-emerald-400 font-semibold">{selectedProfile}</span>
                   </div>
@@ -2400,23 +2333,23 @@ export const JobAnalyzerPage: React.FC = () => {
                       }}
                       className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                         selectedProfile === prof.title
-                          ? "bg-emerald-950/30 border-emerald-500/60 text-slate-900 shadow-md"
-                          : "bg-slate-50 border-slate-200 text-slate-700 hover:border-gray-700 hover:bg-slate-100"
+                          ? "bg-emerald-950/30 border-emerald-500/60 text-slate-900 dark:text-white shadow-md"
+                          : "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-gray-700 hover:bg-slate-100 dark:hover:bg-slate-800"
                       }`}
                     >
                       <div className="space-y-1 min-w-0">
-                        <div className="font-semibold text-slate-900 flex items-center gap-2">
+                        <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                           <span>{prof.title}</span>
                           {selectedProfile === prof.title && (
                             <span className="text-[10px] px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-medium border border-emerald-500/40">Active</span>
                           )}
                         </div>
-                        <p className="text-[11px] text-slate-500 truncate">{prof.subtitle}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{prof.subtitle}</p>
                       </div>
 
                       <div className="text-right shrink-0 font-mono">
                         <div className="text-emerald-400 font-bold text-xs">{prof.rate}</div>
-                        <div className="text-[10px] text-slate-400">{prof.score}</div>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500">{prof.score}</div>
                       </div>
                     </div>
                   ))}
@@ -2426,32 +2359,32 @@ export const JobAnalyzerPage: React.FC = () => {
               {/* TAB 2: TEAM MEMBERS */}
               {profilesModalTab === "team" && (
                 <div className="space-y-3">
-                  <div className="text-[11px] text-slate-500 font-mono">TEAM MEMBERS & WORKSPACE ROLES</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">TEAM MEMBERS & WORKSPACE ROLES</div>
 
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-emerald-900 text-emerald-200 font-bold flex items-center justify-center text-xs border border-emerald-700">
                         {user?.name ? user.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : (user?.email ? user.email.substring(0, 2).toUpperCase() : "US")}
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-900">{user?.name || (user?.email ? user.email.split("@")[0] : "Workspace Member")}</div>
-                        <div className="text-[10px] text-slate-500">{user?.email || "user@company.com"} • Primary Freelancer</div>
+                        <div className="font-semibold text-slate-900 dark:text-white">{user?.name || (user?.email ? user.email.split("@")[0] : "Workspace Member")}</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">{user?.email || "user@company.com"} • Primary Freelancer</div>
                       </div>
                     </div>
                     <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/40 font-mono font-semibold">Workspace Owner</span>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-blue-900 text-blue-200 font-bold flex items-center justify-center text-xs border border-blue-700">
                         SC
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-900">Sarah Chen</div>
-                        <div className="text-[10px] text-slate-500">sarah.c@agency.com • Fullstack Specialist</div>
+                        <div className="font-semibold text-slate-900 dark:text-white">Sarah Chen</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">sarah.c@agency.com • Fullstack Specialist</div>
                       </div>
                     </div>
-                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono font-semibold">Admin</span>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-semibold">Admin</span>
                   </div>
 
                   <button
@@ -2470,7 +2403,7 @@ export const JobAnalyzerPage: React.FC = () => {
               {/* TAB 3: PORTFOLIO & CASE STUDIES */}
               {profilesModalTab === "portfolio" && (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono">
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                     <span>PORTFOLIO & PROOF PROFILES ({portfolioProjects.length})</span>
                     <button
                       onClick={() => {
@@ -2485,10 +2418,10 @@ export const JobAnalyzerPage: React.FC = () => {
                   </div>
 
                   {portfolioProjects.length === 0 ? (
-                    <div className="p-6 text-center bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                      <FolderGit2 className="w-8 h-8 text-gray-600 mx-auto" />
-                      <div className="text-xs text-slate-700 font-semibold">No portfolio projects added yet</div>
-                      <p className="text-[11px] text-slate-400">Add case study proofs to attach directly into generated proposals.</p>
+                    <div className="p-6 text-center bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                      <FolderGit2 className="w-8 h-8 text-gray-600 dark:text-slate-500 mx-auto" />
+                      <div className="text-xs text-slate-700 dark:text-slate-300 font-semibold">No portfolio projects added yet</div>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500">Add case study proofs to attach directly into generated proposals.</p>
                       <button
                         onClick={() => {
                           closeProfilesModal();
@@ -2505,21 +2438,21 @@ export const JobAnalyzerPage: React.FC = () => {
                       {portfolioProjects.map((proj) => (
                         <div 
                           key={proj.id}
-                          className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2"
+                          className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <div className="font-semibold text-slate-900 text-xs">{proj.title}</div>
+                              <div className="font-semibold text-slate-900 dark:text-white text-xs">{proj.title}</div>
                               <div className="text-[10px] text-indigo-300 font-mono">{proj.clientIndustry}</div>
                             </div>
                             <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 font-mono">
                               {proj.metrics || "Verified Proof"}
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-500 line-clamp-2">{proj.summary}</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">{proj.summary}</p>
                           <div className="flex flex-wrap gap-1 pt-1">
                             {proj.techStack.map((tech) => (
-                              <span key={tech} className="text-[9px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-mono">
+                              <span key={tech} className="text-[9px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">
                                 {tech}
                               </span>
                             ))}
@@ -2534,8 +2467,8 @@ export const JobAnalyzerPage: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
-              <div className="text-[11px] text-slate-500 flex items-center gap-1 font-mono">
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 font-mono">
                 <span>URL Synced:</span>
                 <span className="text-emerald-400 font-semibold">{window.location.search || "?view=profiles"}</span>
               </div>
@@ -2550,7 +2483,7 @@ export const JobAnalyzerPage: React.FC = () => {
                 </button>
                 <button
                   onClick={closeProfilesModal}
-                  className="px-4 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-900 text-xs font-semibold cursor-pointer transition-colors"
+                  className="px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-xs font-semibold cursor-pointer transition-colors"
                 >
                   Close & Return
                 </button>
@@ -2565,37 +2498,37 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {showInviteTeamModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 space-y-5 animate-in zoom-in-95">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-5 animate-in zoom-in-95">
             
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Users className="w-4 h-4 text-emerald-400" />
                 <span>Invite Team Member</span>
               </h3>
-              <button onClick={() => setShowInviteTeamModal(false)} className="text-slate-500 hover:text-slate-900 p-1">
+              <button onClick={() => setShowInviteTeamModal(false)} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleInviteTeamMember} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">Email Address *</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Email Address *</label>
                 <input
                   type="email"
                   required
                   placeholder="colleague@agency.com"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-slate-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">Role Permissions</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Role Permissions</label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as any)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="Admin">Admin (Full access + proposal editing)</option>
                   <option value="Member">Member (Create & analyze proposals)</option>
@@ -2607,7 +2540,7 @@ export const JobAnalyzerPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowInviteTeamModal(false)}
-                  className="px-4 py-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold"
+                  className="px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -2629,40 +2562,40 @@ export const JobAnalyzerPage: React.FC = () => {
       {/* ========================================== */}
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 space-y-5 animate-in zoom-in-95">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-5 animate-in zoom-in-95">
             
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Settings className="w-4 h-4 text-emerald-400" />
                 <span>Workspace Settings</span>
               </h3>
-              <button onClick={() => setShowSettingsModal(false)} className="text-slate-500 hover:text-slate-900 p-1">
+              <button onClick={() => setShowSettingsModal(false)} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">Active Workspace Name</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Active Workspace Name</label>
                 <input
                   type="text"
                   value={activeWorkspace}
                   onChange={(e) => setActiveWorkspace(e.target.value)}
-                  className="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">Gemini AI Key Proxy</label>
-                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Gemini AI Key Proxy</label>
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                   <span className="text-emerald-400 font-mono text-[11px]">Server Proxy Active (Encrypted)</span>
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">Default Proposal Tone</label>
-                <select className="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Default Proposal Tone</label>
+                <select className="w-full p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
                   <option>Value-Focused (Recommended)</option>
                   <option>Direct & Short</option>
                   <option>Detailed Technical Case Study</option>
