@@ -27,8 +27,8 @@ export const HomePage: React.FC = () => {
       text: "Looking for a Senior React & Node.js Developer to optimize our SaaS dashboard rendering speed. We have 5,000 active users experiencing latency during peak hours. Budget: $3,500. Must have proven experience with state management, caching, and bundle optimization."
     },
     {
-      title: "3D Product Animation",
-      text: "Need a skilled 3D Animator using Blender/Cinema4D to create 3 high-end 30-second product render videos for medical device launch. Payment verified, hiring immediately. Budget $4,000 fixed."
+      title: "2D Motion & Graphic Design",
+      text: "Need a skilled 2D Motion Graphic Designer using After Effects & Illustrator to create 3 high-end 30-second product explainer videos for SaaS launch. Payment verified, hiring immediately. Budget $4,000 fixed."
     },
     {
       title: "Risky Client / Vague Budget",
@@ -69,7 +69,7 @@ export const HomePage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-0 selection:bg-[#17140f] selection:text-[#f7f2e8]">
+    <div className="space-y-0 selection:bg-slate-900 selection:text-slate-50">
 
       {/* ========================================================= */}
       {/* 1. HERO SECTION (BONE / CREAM BACKGROUND #f7f2e8)         */}
@@ -82,7 +82,7 @@ export const HomePage: React.FC = () => {
         <div className="text-center space-y-6 max-w-4xl mx-auto">
           
           {/* Top Pill Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#17140f]/5 border border-[#ddd2bf] text-[#17140f] text-xs font-mono font-semibold tracking-wider uppercase">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/5 border border-slate-200 text-[#17140f] text-xs font-mono font-semibold tracking-wider uppercase">
             <Sparkles className="w-3.5 h-3.5 text-[#17140f]" />
             <span>AI Upwork Proposal Studio</span>
           </div>
@@ -106,15 +106,15 @@ export const HomePage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <button
               onClick={() => navigate('/dashboard')}
-              className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-[#17140f] hover:bg-[#27241e] text-[#f7f2e8] font-bold text-sm tracking-wide transition-all shadow-lg hover:shadow-xl active:scale-98 flex items-center justify-center gap-2 cursor-pointer font-mono"
+              className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-slate-900 hover:bg-[#27241e] text-slate-50 font-bold text-sm tracking-wide transition-all shadow-lg hover:shadow-xl active:scale-98 flex items-center justify-center gap-2 cursor-pointer font-mono"
             >
               <span>Launch Proposal Dashboard</span>
-              <ArrowRight className="w-4 h-4 text-[#ddd2bf]" />
+              <ArrowRight className="w-4 h-4 text-slate-200" />
             </button>
 
             <button
               onClick={() => navigate('/request-demo')}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#f7f2e8] hover:bg-[#ddd2bf]/30 border border-[#ddd2bf] text-[#17140f] font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#f7f2e8] hover:bg-[#ddd2bf]/30 border border-slate-200 text-[#17140f] font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Book a 1-on-1 Demo</span>
             </button>
@@ -123,9 +123,9 @@ export const HomePage: React.FC = () => {
         </div>
 
         {/* INTERACTIVE HERO DEMO INPUT CARD */}
-        <div className="mt-12 max-w-3xl mx-auto bg-[#f7f2e8] border border-[#ddd2bf] rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+        <div className="mt-12 max-w-3xl mx-auto bg-[#f7f2e8] border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
           
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#ddd2bf] pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
             <div className="flex items-center gap-2">
               <Terminal className="w-4 h-4 text-[#17140f]" />
               <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#17140f]">
@@ -145,8 +145,8 @@ export const HomePage: React.FC = () => {
                   }}
                   className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all shrink-0 cursor-pointer ${
                     selectedPreset === idx
-                      ? 'bg-[#17140f] text-[#f7f2e8] font-bold shadow-xs'
-                      : 'bg-[#17140f]/5 text-[#17140f]/70 border border-[#ddd2bf] hover:text-[#17140f]'
+                      ? 'bg-slate-900 text-slate-50 font-bold shadow-xs'
+                      : 'bg-slate-900/5 text-[#17140f]/70 border border-slate-200 hover:text-[#17140f]'
                   }`}
                 >
                   Preset #{idx + 1}
@@ -165,7 +165,7 @@ export const HomePage: React.FC = () => {
                 setHeroAnalysisComplete(false);
               }}
               placeholder="Paste job post description or URL here..."
-              className="w-full bg-[#17140f]/5 border border-[#ddd2bf] rounded-xl text-xs sm:text-sm p-3.5 text-[#17140f] placeholder-[#17140f]/40 focus:outline-none focus:ring-1 focus:ring-[#17140f] font-sans resize-none leading-relaxed"
+              className="w-full bg-slate-900/5 border border-slate-200 rounded-xl text-xs sm:text-sm p-3.5 text-[#17140f] placeholder-[#17140f]/40 focus:outline-none focus:ring-1 focus:ring-[#17140f] font-sans resize-none leading-relaxed"
             />
           </div>
 
@@ -178,16 +178,16 @@ export const HomePage: React.FC = () => {
             <button
               onClick={handleHeroAnalyze}
               disabled={isAnalyzingHero}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[#17140f] hover:bg-[#27241e] text-[#f7f2e8] text-xs font-mono font-bold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-[#27241e] text-slate-50 text-xs font-mono font-bold tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
             >
               {isAnalyzingHero ? (
                 <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#ddd2bf]" />
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-slate-200" />
                   <span>Analyzing Job & Connect Risk...</span>
                 </>
               ) : (
                 <>
-                  <Zap className="w-3.5 h-3.5 text-[#ddd2bf] fill-[#ddd2bf]" />
+                  <Zap className="w-3.5 h-3.5 text-slate-200 fill-[#ddd2bf]" />
                   <span>Analyze Job & Save Connects</span>
                 </>
               )}
@@ -196,15 +196,15 @@ export const HomePage: React.FC = () => {
 
           {/* Simulated Analysis Result Output */}
           {heroAnalysisComplete && (
-            <div className="p-4 rounded-xl bg-[#17140f] border border-[#ddd2bf] text-[#f7f2e8] space-y-3 animate-in fade-in">
-              <div className="flex items-center justify-between border-b border-[#ddd2bf]/20 pb-2">
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-200 text-slate-50 space-y-3 animate-in fade-in">
+              <div className="flex items-center justify-between border-b border-slate-200/20 pb-2">
                 <div className="flex items-center gap-2 text-xs font-mono text-emerald-400 font-bold">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Fit Score Calculated: {selectedPreset === 2 ? '38.0 / 100 (HIGH RISK)' : '92.3 / 100 (EXCELLENT MATCH)'}</span>
                 </div>
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="text-[11px] font-mono text-[#ddd2bf] hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] font-mono text-slate-200 hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <span>Open Full Studio</span>
                   <ArrowRight className="w-3 h-3" />
@@ -244,18 +244,18 @@ export const HomePage: React.FC = () => {
       {/* ========================================================= */}
       {/* 2. VALUE PROPOSITION (DEEP CHARCOAL BLACK #17140f)         */}
       {/* ========================================================= */}
-      <section id="value-props" className="bg-[#17140f] text-[#f7f2e8] py-20 px-4 sm:px-6 lg:px-8 border-y border-[#ddd2bf]/20">
+      <section id="value-props" className="bg-slate-900 text-slate-50 py-20 px-4 sm:px-6 lg:px-8 border-y border-slate-200/20">
         <div className="max-w-7xl mx-auto space-y-12">
           
           {/* Section Header */}
           <div className="text-center space-y-3 max-w-3xl mx-auto">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#ddd2bf] block font-semibold">
+            <span className="text-xs font-mono uppercase tracking-widest text-slate-200 block font-semibold">
               Value Proposition • Why Proposala
             </span>
-            <h2 className="text-2xl sm:text-4xl font-bold font-serif text-[#f7f2e8]">
+            <h2 className="text-2xl sm:text-4xl font-bold font-serif text-slate-50">
               Designed specifically for Upwork freelancers who value their Connects and time.
             </h2>
-            <p className="text-sm sm:text-base text-[#ddd2bf]/70 font-sans">
+            <p className="text-sm sm:text-base text-slate-200/70 font-sans">
               Generic AI writers generate generic proposals that get ignored. Proposala provides client risk scoring, 
               case study metric pairing, and structured proposal shapes.
             </p>
@@ -265,22 +265,22 @@ export const HomePage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
             
             {/* Bento Card 1: Save Your Connects (7 Cols) */}
-            <div className="lg:col-span-7 bg-[#231f18] border border-[#ddd2bf]/20 rounded-2xl p-6 sm:p-8 space-y-4 shadow-xl hover:border-[#ddd2bf]/40 transition-all group">
-              <div className="w-10 h-10 rounded-xl bg-[#ddd2bf]/10 border border-[#ddd2bf]/30 flex items-center justify-center text-[#ddd2bf]">
+            <div className="lg:col-span-7 bg-slate-800 border border-slate-200/20 rounded-2xl p-6 sm:p-8 space-y-4 shadow-xl hover:border-slate-200/40 transition-all group">
+              <div className="w-10 h-10 rounded-xl bg-[#ddd2bf]/10 border border-slate-200/30 flex items-center justify-center text-slate-200">
                 <ShieldCheck className="w-5 h-5" />
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-xl font-bold font-serif text-[#f7f2e8] group-hover:text-emerald-400 transition-colors">
+                <h3 className="text-xl font-bold font-serif text-slate-50 group-hover:text-emerald-400 transition-colors">
                   Save Your Connects (Pre-Application Risk Filter)
                 </h3>
-                <p className="text-xs sm:text-sm text-[#ddd2bf]/70 leading-relaxed font-sans">
+                <p className="text-xs sm:text-sm text-slate-200/70 leading-relaxed font-sans">
                   Connects are expensive. Proposala analyzes client hire rate, payment verification, budget realism, and scope clarity before you write a single word.
                 </p>
               </div>
 
               {/* Visual Component Snippet */}
-              <div className="bg-[#17140f] p-4 rounded-xl border border-[#ddd2bf]/15 space-y-2 font-mono text-xs">
+              <div className="bg-slate-900 p-4 rounded-xl border border-slate-200/15 space-y-2 font-mono text-xs">
                 <div className="flex items-center justify-between text-gray-400">
                   <span>Client Payment Status:</span>
                   <span className="text-emerald-400 font-bold">✓ Verified ($85,000+ Spent)</span>
@@ -297,65 +297,65 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Bento Card 2: Right Past Work Match (5 Cols) */}
-            <div className="lg:col-span-5 bg-[#231f18] border border-[#ddd2bf]/20 rounded-2xl p-6 sm:p-8 space-y-4 shadow-xl hover:border-[#ddd2bf]/40 transition-all group">
-              <div className="w-10 h-10 rounded-xl bg-[#ddd2bf]/10 border border-[#ddd2bf]/30 flex items-center justify-center text-[#ddd2bf]">
+            <div className="lg:col-span-5 bg-slate-800 border border-slate-200/20 rounded-2xl p-6 sm:p-8 space-y-4 shadow-xl hover:border-slate-200/40 transition-all group">
+              <div className="w-10 h-10 rounded-xl bg-[#ddd2bf]/10 border border-slate-200/30 flex items-center justify-center text-slate-200">
                 <FolderGit2 className="w-5 h-5" />
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-xl font-bold font-serif text-[#f7f2e8] group-hover:text-emerald-400 transition-colors">
+                <h3 className="text-xl font-bold font-serif text-slate-50 group-hover:text-emerald-400 transition-colors">
                   Right Past Work Match
                 </h3>
-                <p className="text-xs sm:text-sm text-[#ddd2bf]/70 leading-relaxed font-sans">
+                <p className="text-xs sm:text-sm text-slate-200/70 leading-relaxed font-sans">
                   Never manually search through past client files again. Proposala automatically attaches your highest-impact case study proofs and verified metrics.
                 </p>
               </div>
 
               {/* Mini Case Study Card */}
-              <div className="bg-[#17140f] p-3.5 rounded-xl border border-[#ddd2bf]/15 text-xs font-mono space-y-1">
+              <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-200/15 text-xs font-mono space-y-1">
                 <div className="text-emerald-400 font-bold">Matched: FinTech Dashboard Refactor</div>
                 <div className="text-gray-400 text-[11px]">Metric: Reduced query render time by -74%</div>
               </div>
             </div>
 
             {/* Bento Card 3: Proposal Shapes & Structure (5 Cols) */}
-            <div className="lg:col-span-5 bg-[#231f18] border border-[#ddd2bf]/20 rounded-2xl p-6 sm:p-8 space-y-4 shadow-xl hover:border-[#ddd2bf]/40 transition-all group">
-              <div className="w-10 h-10 rounded-xl bg-[#ddd2bf]/10 border border-[#ddd2bf]/30 flex items-center justify-center text-[#ddd2bf]">
+            <div className="lg:col-span-5 bg-slate-800 border border-slate-200/20 rounded-2xl p-6 sm:p-8 space-y-4 shadow-xl hover:border-slate-200/40 transition-all group">
+              <div className="w-10 h-10 rounded-xl bg-[#ddd2bf]/10 border border-slate-200/30 flex items-center justify-center text-slate-200">
                 <Layers className="w-5 h-5" />
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-xl font-bold font-serif text-[#f7f2e8] group-hover:text-emerald-400 transition-colors">
+                <h3 className="text-xl font-bold font-serif text-slate-50 group-hover:text-emerald-400 transition-colors">
                   Strategic Proposal Shapes
                 </h3>
-                <p className="text-xs sm:text-sm text-[#ddd2bf]/70 leading-relaxed font-sans">
+                <p className="text-xs sm:text-sm text-slate-200/70 leading-relaxed font-sans">
                   Mix and match Opener Hooks (Direct Pain-Point), Middle Scope of Work, and Close Calls-to-Action for custom persuasion flow.
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-1.5 font-mono text-[11px]">
-                <span className="px-2 py-1 rounded bg-[#17140f] border border-[#ddd2bf]/20 text-[#ddd2bf]">Opener: Pain-Point Hook</span>
-                <span className="px-2 py-1 rounded bg-[#17140f] border border-[#ddd2bf]/20 text-[#ddd2bf]">Middle: SOW Sprint</span>
-                <span className="px-2 py-1 rounded bg-[#17140f] border border-[#ddd2bf]/20 text-[#ddd2bf]">Close: Soft Question</span>
+                <span className="px-2 py-1 rounded bg-slate-900 border border-slate-200/20 text-slate-200">Opener: Pain-Point Hook</span>
+                <span className="px-2 py-1 rounded bg-slate-900 border border-slate-200/20 text-slate-200">Middle: SOW Sprint</span>
+                <span className="px-2 py-1 rounded bg-slate-900 border border-slate-200/20 text-slate-200">Close: Soft Question</span>
               </div>
             </div>
 
             {/* Bento Card 4: Human Non-AI Tone (7 Cols) */}
-            <div className="lg:col-span-7 bg-[#231f18] border border-[#ddd2bf]/20 rounded-2xl p-6 sm:p-8 space-y-4 shadow-xl hover:border-[#ddd2bf]/40 transition-all group">
-              <div className="w-10 h-10 rounded-xl bg-[#ddd2bf]/10 border border-[#ddd2bf]/30 flex items-center justify-center text-[#ddd2bf]">
+            <div className="lg:col-span-7 bg-slate-800 border border-slate-200/20 rounded-2xl p-6 sm:p-8 space-y-4 shadow-xl hover:border-slate-200/40 transition-all group">
+              <div className="w-10 h-10 rounded-xl bg-[#ddd2bf]/10 border border-slate-200/30 flex items-center justify-center text-slate-200">
                 <Brain className="w-5 h-5" />
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-xl font-bold font-serif text-[#f7f2e8] group-hover:text-emerald-400 transition-colors">
+                <h3 className="text-xl font-bold font-serif text-slate-50 group-hover:text-emerald-400 transition-colors">
                   Human Tone • Zero Fluffy AI Slop
                 </h3>
-                <p className="text-xs sm:text-sm text-[#ddd2bf]/70 leading-relaxed font-sans">
+                <p className="text-xs sm:text-sm text-slate-200/70 leading-relaxed font-sans">
                   Clients instantly reject generic AI text. Proposala uses precise engineering and industry vocabulary that sounds like an expert senior consultant.
                 </p>
               </div>
 
-              <div className="bg-[#17140f] p-3.5 rounded-xl border border-[#ddd2bf]/15 text-xs text-gray-300 font-sans leading-relaxed">
+              <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-200/15 text-xs text-gray-300 font-sans leading-relaxed">
                 "I reviewed your job post for SaaS performance optimization. The main challenge here isn't just component styling, but eliminating state re-render bottlenecks..."
               </div>
             </div>
@@ -386,8 +386,8 @@ export const HomePage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Step 1 */}
-          <div className="bg-[#f7f2e8] border border-[#ddd2bf] rounded-2xl p-6 space-y-4 shadow-md relative hover:shadow-lg transition-all">
-            <div className="w-8 h-8 rounded-lg bg-[#17140f] text-[#f7f2e8] font-mono font-bold text-xs flex items-center justify-center">
+          <div className="bg-[#f7f2e8] border border-slate-200 rounded-2xl p-6 space-y-4 shadow-md relative hover:shadow-lg transition-all">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 text-slate-50 font-mono font-bold text-xs flex items-center justify-center">
               01
             </div>
             <h3 className="text-base font-bold font-serif text-[#17140f]">1. Paste Job Description</h3>
@@ -397,8 +397,8 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Step 2 */}
-          <div className="bg-[#f7f2e8] border border-[#ddd2bf] rounded-2xl p-6 space-y-4 shadow-md relative hover:shadow-lg transition-all">
-            <div className="w-8 h-8 rounded-lg bg-[#17140f] text-[#f7f2e8] font-mono font-bold text-xs flex items-center justify-center">
+          <div className="bg-[#f7f2e8] border border-slate-200 rounded-2xl p-6 space-y-4 shadow-md relative hover:shadow-lg transition-all">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 text-slate-50 font-mono font-bold text-xs flex items-center justify-center">
               02
             </div>
             <h3 className="text-base font-bold font-serif text-[#17140f]">2. AI Intent & Risk Analysis</h3>
@@ -408,8 +408,8 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Step 3 */}
-          <div className="bg-[#f7f2e8] border border-[#ddd2bf] rounded-2xl p-6 space-y-4 shadow-md relative hover:shadow-lg transition-all">
-            <div className="w-8 h-8 rounded-lg bg-[#17140f] text-[#f7f2e8] font-mono font-bold text-xs flex items-center justify-center">
+          <div className="bg-[#f7f2e8] border border-slate-200 rounded-2xl p-6 space-y-4 shadow-md relative hover:shadow-lg transition-all">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 text-slate-50 font-mono font-bold text-xs flex items-center justify-center">
               03
             </div>
             <h3 className="text-base font-bold font-serif text-[#17140f]">3. Past Work Proof Match</h3>
@@ -419,8 +419,8 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Step 4 */}
-          <div className="bg-[#f7f2e8] border border-[#ddd2bf] rounded-2xl p-6 space-y-4 shadow-md relative hover:shadow-lg transition-all">
-            <div className="w-8 h-8 rounded-lg bg-[#17140f] text-[#f7f2e8] font-mono font-bold text-xs flex items-center justify-center">
+          <div className="bg-[#f7f2e8] border border-slate-200 rounded-2xl p-6 space-y-4 shadow-md relative hover:shadow-lg transition-all">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 text-slate-50 font-mono font-bold text-xs flex items-center justify-center">
               04
             </div>
             <h3 className="text-base font-bold font-serif text-[#17140f]">4. Generate & Edit Draft</h3>
@@ -436,28 +436,28 @@ export const HomePage: React.FC = () => {
       {/* ========================================================= */}
       {/* 4. COMPARISON SECTION (GENERIC AI vs PROPOSALA)          */}
       {/* ========================================================= */}
-      <section id="comparison" className="bg-[#17140f] text-[#f7f2e8] py-20 px-4 sm:px-6 lg:px-8 border-y border-[#ddd2bf]/20">
+      <section id="comparison" className="bg-slate-900 text-slate-50 py-20 px-4 sm:px-6 lg:px-8 border-y border-slate-200/20">
         <div className="max-w-5xl mx-auto space-y-12">
           
           <div className="text-center space-y-3">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#ddd2bf] block font-semibold">
+            <span className="text-xs font-mono uppercase tracking-widest text-slate-200 block font-semibold">
               Logic & Comparison
             </span>
-            <h2 className="text-2xl sm:text-4xl font-bold font-serif text-[#f7f2e8]">
+            <h2 className="text-2xl sm:text-4xl font-bold font-serif text-slate-50">
               Generic AI Writer vs. Proposala
             </h2>
-            <p className="text-sm text-[#ddd2bf]/70 font-sans max-w-xl mx-auto">
+            <p className="text-sm text-slate-200/70 font-sans max-w-xl mx-auto">
               Why generic ChatGPT proposals fail on Upwork, and how Proposala's tailored architecture wins client interviews.
             </p>
           </div>
 
           {/* Comparison Table Container */}
-          <div className="bg-[#231f18] border border-[#ddd2bf]/20 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="bg-slate-800 border border-slate-200/20 rounded-2xl overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs sm:text-sm font-sans">
                 <thead>
-                  <tr className="border-b border-[#ddd2bf]/20 bg-[#17140f]">
-                    <th className="p-4 sm:p-5 text-[#ddd2bf] font-mono uppercase tracking-wider text-xs">Feature / Capability</th>
+                  <tr className="border-b border-slate-200/20 bg-slate-900">
+                    <th className="p-4 sm:p-5 text-slate-200 font-mono uppercase tracking-wider text-xs">Feature / Capability</th>
                     <th className="p-4 sm:p-5 text-gray-400 font-mono uppercase tracking-wider text-xs">Generic ChatGPT / AI Writer</th>
                     <th className="p-4 sm:p-5 text-emerald-400 font-mono uppercase tracking-wider text-xs font-bold">Proposala Upwork Studio</th>
                   </tr>
@@ -465,7 +465,7 @@ export const HomePage: React.FC = () => {
                 <tbody className="divide-y divide-[#ddd2bf]/10">
                   
                   <tr>
-                    <td className="p-4 sm:p-5 font-bold text-[#f7f2e8]">Upwork Connect Risk Filter</td>
+                    <td className="p-4 sm:p-5 font-bold text-slate-50">Upwork Connect Risk Filter</td>
                     <td className="p-4 sm:p-5 text-gray-400 flex items-center gap-1.5">
                       <XCircle className="w-4 h-4 text-red-400 shrink-0" />
                       <span>None (Generates text on bad posts)</span>
@@ -477,7 +477,7 @@ export const HomePage: React.FC = () => {
                   </tr>
 
                   <tr>
-                    <td className="p-4 sm:p-5 font-bold text-[#f7f2e8]">Portfolio Case Study Matching</td>
+                    <td className="p-4 sm:p-5 font-bold text-slate-50">Portfolio Case Study Matching</td>
                     <td className="p-4 sm:p-5 text-gray-400 flex items-center gap-1.5">
                       <XCircle className="w-4 h-4 text-red-400 shrink-0" />
                       <span>Makes up fake experience & quotes</span>
@@ -489,7 +489,7 @@ export const HomePage: React.FC = () => {
                   </tr>
 
                   <tr>
-                    <td className="p-4 sm:p-5 font-bold text-[#f7f2e8]">Proposal Opening Hook</td>
+                    <td className="p-4 sm:p-5 font-bold text-slate-50">Proposal Opening Hook</td>
                     <td className="p-4 sm:p-5 text-gray-400 flex items-center gap-1.5">
                       <XCircle className="w-4 h-4 text-red-400 shrink-0" />
                       <span>"Dear Hiring Manager, I am thrilled to apply..."</span>
@@ -501,7 +501,7 @@ export const HomePage: React.FC = () => {
                   </tr>
 
                   <tr>
-                    <td className="p-4 sm:p-5 font-bold text-[#f7f2e8]">Strategic Structural Flow</td>
+                    <td className="p-4 sm:p-5 font-bold text-slate-50">Strategic Structural Flow</td>
                     <td className="p-4 sm:p-5 text-gray-400 flex items-center gap-1.5">
                       <XCircle className="w-4 h-4 text-red-400 shrink-0" />
                       <span>Unstructured walls of AI text</span>
@@ -513,7 +513,7 @@ export const HomePage: React.FC = () => {
                   </tr>
 
                   <tr>
-                    <td className="p-4 sm:p-5 font-bold text-[#f7f2e8]">Tone & Word Choice</td>
+                    <td className="p-4 sm:p-5 font-bold text-slate-50">Tone & Word Choice</td>
                     <td className="p-4 sm:p-5 text-gray-400 flex items-center gap-1.5">
                       <XCircle className="w-4 h-4 text-red-400 shrink-0" />
                       <span>Uses buzzwords ("delve", "supercharge")</span>
@@ -551,11 +551,11 @@ export const HomePage: React.FC = () => {
           {faqItems.map((faq, idx) => (
             <div 
               key={idx}
-              className="bg-[#f7f2e8] border border-[#ddd2bf] rounded-xl overflow-hidden transition-all shadow-xs"
+              className="bg-[#f7f2e8] border border-slate-200 rounded-xl overflow-hidden transition-all shadow-xs"
             >
               <button
                 onClick={() => setOpenFaqIndex(openFaqIndex === idx ? null : idx)}
-                className="w-full p-4 sm:p-5 text-left font-serif font-bold text-sm sm:text-base text-[#17140f] flex items-center justify-between gap-4 cursor-pointer hover:bg-[#17140f]/5 transition-colors"
+                className="w-full p-4 sm:p-5 text-left font-serif font-bold text-sm sm:text-base text-[#17140f] flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-900/5 transition-colors"
               >
                 <span>{faq.question}</span>
                 {openFaqIndex === idx ? (
@@ -566,7 +566,7 @@ export const HomePage: React.FC = () => {
               </button>
 
               {openFaqIndex === idx && (
-                <div className="px-4 pb-5 pt-1 text-xs sm:text-sm text-[#17140f]/80 leading-relaxed font-sans border-t border-[#ddd2bf]/60 animate-in fade-in">
+                <div className="px-4 pb-5 pt-1 text-xs sm:text-sm text-[#17140f]/80 leading-relaxed font-sans border-t border-slate-200/60 animate-in fade-in">
                   {faq.answer}
                 </div>
               )}
@@ -579,12 +579,12 @@ export const HomePage: React.FC = () => {
       {/* ========================================================= */}
       {/* 6. BOTTOM HIGH-IMPACT CTA SECTION                         */}
       {/* ========================================================= */}
-      <section className="bg-[#17140f] text-[#f7f2e8] py-16 px-4 sm:px-6 lg:px-8 border-t border-[#ddd2bf]/20">
+      <section className="bg-slate-900 text-slate-50 py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-200/20">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <h2 className="text-3xl sm:text-5xl font-bold font-serif">
             Ready to win better Upwork contracts?
           </h2>
-          <p className="text-sm sm:text-base text-[#ddd2bf]/70 max-w-xl mx-auto font-sans">
+          <p className="text-sm sm:text-base text-slate-200/70 max-w-xl mx-auto font-sans">
             Start analyzing job posts, saving your Connects, and crafting winning proposals today.
           </p>
 
@@ -598,7 +598,7 @@ export const HomePage: React.FC = () => {
 
             <button
               onClick={() => navigate('/request-demo')}
-              className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-[#231f18] hover:bg-[#2e2920] border border-[#ddd2bf]/30 text-[#f7f2e8] text-sm font-semibold transition-all cursor-pointer"
+              className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-200/30 text-slate-50 text-sm font-semibold transition-all cursor-pointer"
             >
               Request a 1-on-1 Demo
             </button>
