@@ -74,10 +74,10 @@ export const Navbar: React.FC = () => {
           {/* CTA Button & Actions (Right - Desktop) */}
           <div className="hidden md:flex items-center gap-3">
             <Link
-              to="/dashboard"
+              to="/proposals/new"
               className="px-3.5 py-2 text-xs font-mono font-semibold text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-sm transition-all shadow-xs"
             >
-              Launch App
+              Create Proposal
             </Link>
 
             <Link
@@ -137,11 +137,11 @@ export const Navbar: React.FC = () => {
               FAQ
             </button>
             <Link
-              to="/dashboard"
+              to="/proposals/new"
               onClick={() => setMobileMenuOpen(false)}
               className="py-2 text-slate-900 font-semibold border-b border-slate-100"
             >
-              Launch Upwork Proposal Studio
+              Create Proposal
             </Link>
           </div>
 
