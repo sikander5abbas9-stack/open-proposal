@@ -51,14 +51,14 @@ export const DemoPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center py-10 px-4 bg-[#f7f2e8] text-[#17140f] selection:bg-[#17140f] selection:text-[#f7f2e8]">
+    <div className="min-h-screen flex flex-col justify-center items-center py-10 px-4 bg-[#f7f2e8] text-[#17140f] selection:bg-slate-900 selection:text-slate-50">
       
       {/* Centered Box (max-width 440px) */}
       <div className="w-full max-w-[440px] mx-auto space-y-6">
 
         {isSubmitted ? (
           /* Confirmation Success View */
-          <div className="bg-white p-8 rounded-2xl border border-[#ddd2bf] shadow-sm text-center space-y-6 animate-fade-in">
+          <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm text-center space-y-6 animate-fade-in">
             <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto border border-emerald-300">
               <Check className="w-7 h-7 stroke-[3]" />
             </div>
@@ -74,7 +74,7 @@ export const DemoPage: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-[#f7f2e8] border border-[#ddd2bf] text-left text-xs space-y-1.5 text-[#17140f] font-sans">
+            <div className="p-4 rounded-xl bg-[#f7f2e8] border border-slate-200 text-left text-xs space-y-1.5 text-[#17140f] font-sans">
               <p>• <strong>Contact:</strong> {nameOrCompany || email}</p>
               <p>• <strong>Phone:</strong> {phone}</p>
               <p>• <strong>Status:</strong> {submittedType === 'call' ? `Confirmed (${selectedDate} @ ${selectedTime})` : 'Invite Priority Queue'}</p>
@@ -83,9 +83,9 @@ export const DemoPage: React.FC = () => {
             <div className="pt-2 space-y-2">
               <Link
                 to="/login"
-                className="w-full py-3 px-4 rounded-md bg-[#17140f] hover:bg-[#27241e] text-[#f7f2e8] font-medium text-sm flex items-center justify-center gap-2 transition-colors shadow-xs font-mono"
+                className="w-full py-3 px-4 rounded-md bg-slate-900 hover:bg-[#27241e] text-slate-50 font-medium text-sm flex items-center justify-center gap-2 transition-colors shadow-xs font-mono"
               >
-                <Sparkles className="w-4 h-4 text-[#ddd2bf]" />
+                <Sparkles className="w-4 h-4 text-slate-200" />
                 <span>Go to Sign in</span>
               </Link>
 
@@ -102,7 +102,7 @@ export const DemoPage: React.FC = () => {
           </div>
         ) : isBookingCallMode ? (
           /* Book a Call Selector View */
-          <div className="space-y-6 animate-fade-in bg-white p-8 rounded-2xl border border-[#ddd2bf] shadow-sm">
+          <div className="space-y-6 animate-fade-in bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
             <button
               onClick={() => setIsBookingCallMode(false)}
               className="inline-flex items-center gap-1.5 text-xs text-[#17140f]/70 hover:text-[#17140f] font-medium transition-colors cursor-pointer"
@@ -131,7 +131,7 @@ export const DemoPage: React.FC = () => {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+1 (555) 000-0000"
-                  className="w-full bg-[#f7f2e8] border border-[#ddd2bf] rounded-md text-sm p-3 text-[#17140f] placeholder-[#17140f]/40 focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all"
+                  className="w-full bg-[#f7f2e8] border border-slate-200 rounded-md text-sm p-3 text-[#17140f] placeholder-[#17140f]/40 focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all"
                 />
               </div>
 
@@ -145,7 +145,7 @@ export const DemoPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
-                  className="w-full bg-[#f7f2e8] border border-[#ddd2bf] rounded-md text-sm p-3 text-[#17140f] placeholder-[#17140f]/40 focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all"
+                  className="w-full bg-[#f7f2e8] border border-slate-200 rounded-md text-sm p-3 text-[#17140f] placeholder-[#17140f]/40 focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all"
                 />
               </div>
 
@@ -157,7 +157,7 @@ export const DemoPage: React.FC = () => {
                   <select
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full bg-[#f7f2e8] border border-[#ddd2bf] rounded-md text-sm p-3 text-[#17140f] focus:outline-none focus:ring-1 focus:ring-[#17140f]"
+                    className="w-full bg-[#f7f2e8] border border-slate-200 rounded-md text-sm p-3 text-[#17140f] focus:outline-none focus:ring-1 focus:ring-[#17140f]"
                   >
                     <option value="Tomorrow (Friday)">Tomorrow (Fri)</option>
                     <option value="Monday">Monday</option>
@@ -173,7 +173,7 @@ export const DemoPage: React.FC = () => {
                   <select
                     value={selectedTime}
                     onChange={(e) => setSelectedTime(e.target.value)}
-                    className="w-full bg-[#f7f2e8] border border-[#ddd2bf] rounded-md text-sm p-3 text-[#17140f] focus:outline-none focus:ring-1 focus:ring-[#17140f]"
+                    className="w-full bg-[#f7f2e8] border border-slate-200 rounded-md text-sm p-3 text-[#17140f] focus:outline-none focus:ring-1 focus:ring-[#17140f]"
                   >
                     <option value="10:00 AM EST">10:00 AM EST</option>
                     <option value="11:30 AM EST">11:30 AM EST</option>
@@ -186,11 +186,11 @@ export const DemoPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-[#17140f] hover:bg-[#27241e] text-[#f7f2e8] rounded-md py-3 text-sm font-medium transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer mt-4 font-mono"
+                className="w-full bg-slate-900 hover:bg-[#27241e] text-slate-50 rounded-md py-3 text-sm font-medium transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer mt-4 font-mono"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin text-[#ddd2bf]" />
+                    <Loader2 className="w-4 h-4 animate-spin text-slate-200" />
                     <span>Confirming...</span>
                   </>
                 ) : (
@@ -204,7 +204,7 @@ export const DemoPage: React.FC = () => {
           </div>
         ) : (
           /* Request Access Form */
-          <div className="space-y-6 text-left bg-white p-8 rounded-2xl border border-[#ddd2bf] shadow-sm">
+          <div className="space-y-6 text-left bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
             
             {/* Header Section */}
             <div>
@@ -233,7 +233,7 @@ export const DemoPage: React.FC = () => {
                   value={nameOrCompany}
                   onChange={(e) => setNameOrCompany(e.target.value)}
                   placeholder="Your name or company name"
-                  className="w-full bg-[#f7f2e8] border border-[#ddd2bf] rounded-md text-sm p-3 placeholder-[#17140f]/40 text-[#17140f] focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all"
+                  className="w-full bg-[#f7f2e8] border border-slate-200 rounded-md text-sm p-3 placeholder-[#17140f]/40 text-[#17140f] focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all"
                 />
               </div>
 
@@ -252,7 +252,7 @@ export const DemoPage: React.FC = () => {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+1 (555) 000-0000"
-                  className="w-full bg-[#f7f2e8] border border-[#ddd2bf] rounded-md text-sm p-3 placeholder-[#17140f]/40 text-[#17140f] focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all"
+                  className="w-full bg-[#f7f2e8] border border-slate-200 rounded-md text-sm p-3 placeholder-[#17140f]/40 text-[#17140f] focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all"
                 />
               </div>
 
@@ -271,7 +271,7 @@ export const DemoPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
-                  className="w-full bg-[#f7f2e8] border border-[#ddd2bf] rounded-md text-sm p-3 placeholder-[#17140f]/40 text-[#17140f] focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all"
+                  className="w-full bg-[#f7f2e8] border border-slate-200 rounded-md text-sm p-3 placeholder-[#17140f]/40 text-[#17140f] focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all"
                 />
               </div>
 
@@ -289,7 +289,7 @@ export const DemoPage: React.FC = () => {
                   value={lookingFor}
                   onChange={(e) => setLookingFor(e.target.value)}
                   placeholder="A line or two about your work and what you’d use Proposala for."
-                  className="w-full bg-[#f7f2e8] border border-[#ddd2bf] rounded-md text-sm p-3 placeholder-[#17140f]/40 text-[#17140f] focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all resize-none"
+                  className="w-full bg-[#f7f2e8] border border-slate-200 rounded-md text-sm p-3 placeholder-[#17140f]/40 text-[#17140f] focus:outline-none focus:ring-1 focus:ring-[#17140f] transition-all resize-none"
                 />
               </div>
 
@@ -298,11 +298,11 @@ export const DemoPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-[#17140f] text-[#f7f2e8] hover:bg-[#27241e] rounded-md py-3 text-sm font-medium transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer font-mono"
+                  className="w-full bg-slate-900 text-slate-50 hover:bg-[#27241e] rounded-md py-3 text-sm font-medium transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer font-mono"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin text-[#ddd2bf]" />
+                      <Loader2 className="w-4 h-4 animate-spin text-slate-200" />
                       <span>Submitting...</span>
                     </>
                   ) : (
@@ -314,7 +314,7 @@ export const DemoPage: React.FC = () => {
               {/* Divider with "or" */}
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-[#ddd2bf]" />
+                  <div className="w-full border-t border-slate-200" />
                 </div>
                 <div className="relative flex justify-center text-xs">
                   <span className="bg-white px-3 text-[#17140f]/60 font-medium font-mono">or</span>
@@ -326,7 +326,7 @@ export const DemoPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsBookingCallMode(true)}
-                  className="w-full bg-[#f7f2e8] hover:bg-[#efe8d8] border border-[#ddd2bf] text-[#17140f] rounded-md py-3 text-sm font-medium transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer font-mono"
+                  className="w-full bg-[#f7f2e8] hover:bg-[#efe8d8] border border-slate-200 text-[#17140f] rounded-md py-3 text-sm font-medium transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer font-mono"
                 >
                   <Calendar className="w-4 h-4 text-[#17140f]/70" />
                   <span>Book a call</span>
