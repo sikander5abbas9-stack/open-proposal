@@ -98,28 +98,28 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
   ];
 
   return (
-    <div className="space-y-8 font-sans text-slate-900 pb-16">
+    <div className="space-y-8 font-sans text-slate-900 dark:text-slate-100 pb-16">
       
       {/* Header & Subtitle */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div>
-          <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+          <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400 dark:text-slate-500">
             PROPOSALA · OWNER VIEW
           </div>
-          <h1 className="text-3xl font-serif font-bold text-slate-900 tracking-tight mt-0.5">
+          <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-white tracking-tight mt-0.5">
             Dashboard
           </h1>
-          <p className="text-xs text-slate-600 font-sans mt-1">
-            Workspace health for <span className="font-semibold text-slate-900">salmanziachattha107's workspace</span>. Activity, outcomes, and library coverage at a glance.
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-sans mt-1">
+            Workspace health for <span className="font-semibold text-slate-900 dark:text-slate-200">salmanziachattha107's workspace</span>. Activity, outcomes, and library coverage at a glance.
           </p>
         </div>
 
         {/* Filter Buttons */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-sm border border-slate-200 shrink-0 font-mono text-[11px]">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-sm border border-slate-200 dark:border-slate-700 shrink-0 font-mono text-[11px]">
           <button
             onClick={() => setTimeFilter('today')}
             className={`px-3 py-1 rounded-sm transition-colors cursor-pointer ${
-              timeFilter === 'today' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600 hover:text-slate-900'
+              timeFilter === 'today' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             TODAY
@@ -127,7 +127,7 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
           <button
             onClick={() => setTimeFilter('7d')}
             className={`px-3 py-1 rounded-sm transition-colors cursor-pointer ${
-              timeFilter === '7d' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600 hover:text-slate-900'
+              timeFilter === '7d' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             LAST 7D
@@ -135,7 +135,7 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
           <button
             onClick={() => setTimeFilter('30d')}
             className={`px-3 py-1 rounded-sm transition-colors cursor-pointer ${
-              timeFilter === '30d' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600 hover:text-slate-900'
+              timeFilter === '30d' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             LAST 30D
@@ -143,7 +143,7 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
           <button
             onClick={() => setTimeFilter('all')}
             className={`px-3 py-1 rounded-sm transition-colors cursor-pointer ${
-              timeFilter === 'all' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600 hover:text-slate-900'
+              timeFilter === 'all' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             ALL PROPOSALS
@@ -154,14 +154,14 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
       {/* Row 1 Metrics (4 Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {metricsRow1.map((m, idx) => (
-          <div key={idx} className="bg-white border border-slate-200 rounded-sm p-5 space-y-2 shadow-2xs">
-            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+          <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-5 space-y-2 shadow-2xs">
+            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               {m.label}
             </div>
-            <div className="text-3xl font-serif font-black text-slate-900 tracking-tight">
+            <div className="text-3xl font-serif font-black text-slate-900 dark:text-slate-100 tracking-tight">
               {m.value}
             </div>
-            <div className="text-[11px] text-slate-500 font-sans">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-sans">
               {m.subtitle}
             </div>
           </div>
@@ -171,14 +171,14 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
       {/* Row 2 Metrics (4 Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {metricsRow2.map((m, idx) => (
-          <div key={idx} className="bg-white border border-slate-200 rounded-sm p-5 space-y-2 shadow-2xs">
-            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+          <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-5 space-y-2 shadow-2xs">
+            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               {m.label}
             </div>
-            <div className="text-3xl font-serif font-black text-slate-900 tracking-tight">
+            <div className="text-3xl font-serif font-black text-slate-900 dark:text-slate-100 tracking-tight">
               {m.value}
             </div>
-            <div className="text-[11px] text-slate-500 font-sans">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-sans">
               {m.subtitle}
             </div>
           </div>
@@ -189,40 +189,40 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
         {/* Outcome Funnel (5 cols) */}
-        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-sm p-6 space-y-5 flex flex-col justify-between shadow-2xs">
+        <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-6 space-y-5 flex flex-col justify-between shadow-2xs">
           <div>
-            <h3 className="text-base font-serif font-bold text-slate-900">Outcome funnel</h3>
-            <p className="text-xs text-slate-500">Where every draft lands today.</p>
+            <h3 className="text-base font-serif font-bold text-slate-900 dark:text-slate-100">Outcome funnel</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Where every draft lands today.</p>
           </div>
 
           <div className="space-y-3 font-mono text-xs">
             {outcomeFunnel.map((item, idx) => (
               <div key={idx} className="space-y-1">
-                <div className="flex justify-between text-slate-700">
+                <div className="flex justify-between text-slate-700 dark:text-slate-300">
                   <span className="font-medium">{item.name}</span>
-                  <span>{item.count} <span className="text-slate-400 text-[11px]">· {item.percentage}%</span></span>
+                  <span>{item.count} <span className="text-slate-400 dark:text-slate-500 text-[11px]">· {item.percentage}%</span></span>
                 </div>
-                <div className="w-full bg-slate-100 h-2 rounded-sm overflow-hidden">
+                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-sm overflow-hidden">
                   <div className={`h-full ${item.color}`} style={{ width: `${item.percentage}%` }} />
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-100 font-mono">
+          <div className="text-[11px] text-slate-400 dark:text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800 font-mono">
             123 drafts total · 100% pending label
           </div>
         </div>
 
         {/* Daily volume bar chart (7 cols) */}
-        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-sm p-6 space-y-5 flex flex-col justify-between shadow-2xs">
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-6 space-y-5 flex flex-col justify-between shadow-2xs">
           <div>
-            <h3 className="text-base font-serif font-bold text-slate-900">Daily volume · last 30 days</h3>
-            <p className="text-xs text-slate-500">123 drafts · peak 27 on 2026-07-17</p>
+            <h3 className="text-base font-serif font-bold text-slate-900 dark:text-slate-100">Daily volume · last 30 days</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">123 drafts · peak 27 on 2026-07-17</p>
           </div>
 
           {/* Bar Chart Visualizer */}
-          <div className="h-44 flex items-end gap-2 pt-6 pb-2 border-b border-slate-100 px-2">
+          <div className="h-44 flex items-end gap-2 pt-6 pb-2 border-b border-slate-100 dark:border-slate-800 px-2">
             {dailyVolumeBars.map((bar, i) => {
               const maxVal = 27;
               const heightPct = Math.max((bar.count / maxVal) * 100, 8);
@@ -231,17 +231,17 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
                   {/* Tooltip */}
-                  <div className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] font-mono px-1.5 py-0.5 rounded-sm whitespace-nowrap z-10 pointer-events-none">
+                  <div className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-[10px] font-mono px-1.5 py-0.5 rounded-sm whitespace-nowrap z-10 pointer-events-none">
                     {bar.date}: {bar.count}
                   </div>
                   
-                  <div className="w-full bg-slate-100 h-36 flex items-end rounded-sm overflow-hidden">
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-36 flex items-end rounded-sm overflow-hidden">
                     <div
-                      className={`w-full transition-all ${isPeak ? 'bg-emerald-600' : 'bg-slate-700 group-hover:bg-slate-900'}`}
+                      className={`w-full transition-all ${isPeak ? 'bg-emerald-600' : 'bg-slate-700 dark:bg-slate-400 group-hover:bg-slate-900 dark:group-hover:bg-slate-200'}`}
                       style={{ height: `${heightPct}%` }}
                     />
                   </div>
-                  <span className="text-[9px] font-mono text-slate-400 truncate w-full text-center">
+                  <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 truncate w-full text-center">
                     {bar.date.substring(8)}
                   </span>
                 </div>
@@ -249,7 +249,7 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
             })}
           </div>
 
-          <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+          <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 dark:text-slate-500">
             <span>2026-07-02</span>
             <span>2026-08-01</span>
           </div>
@@ -258,16 +258,16 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
       </div>
 
       {/* Row 4: By Teammate Table */}
-      <div className="bg-white border border-slate-200 rounded-sm p-6 space-y-4 shadow-2xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-6 space-y-4 shadow-2xs">
         <div>
-          <h3 className="text-base font-serif font-bold text-slate-900">By teammate · last 30 days</h3>
-          <p className="text-xs text-slate-500">Submissions and outcomes per teammate in the selected window.</p>
+          <h3 className="text-base font-serif font-bold text-slate-900 dark:text-slate-100">By teammate · last 30 days</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Submissions and outcomes per teammate in the selected window.</p>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+              <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                 <th className="py-2.5 px-3">TEAMMATE</th>
                 <th className="py-2.5 px-3">SENT</th>
                 <th className="py-2.5 px-3">VIEWED</th>
@@ -276,18 +276,18 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
                 <th className="py-2.5 px-3 text-right">WIN RATE</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {teammateStats.map((tm, idx) => (
-                <tr key={idx} className="hover:bg-slate-50">
+                <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="py-3 px-3">
-                    <div className="font-bold text-slate-900 font-sans text-xs">{tm.name}</div>
-                    <div className="text-[11px] text-slate-400 font-mono">{tm.email}</div>
+                    <div className="font-bold text-slate-900 dark:text-slate-100 font-sans text-xs">{tm.name}</div>
+                    <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{tm.email}</div>
                   </td>
-                  <td className="py-3 px-3 text-slate-900 font-bold">{tm.sent}</td>
-                  <td className="py-3 px-3 text-slate-500">{tm.viewed}</td>
-                  <td className="py-3 px-3 text-slate-500">{tm.response}</td>
-                  <td className="py-3 px-3 text-slate-500">{tm.won}</td>
-                  <td className="py-3 px-3 text-right text-slate-400">{tm.winRate}</td>
+                  <td className="py-3 px-3 text-slate-900 dark:text-slate-100 font-bold">{tm.sent}</td>
+                  <td className="py-3 px-3 text-slate-500 dark:text-slate-400">{tm.viewed}</td>
+                  <td className="py-3 px-3 text-slate-500 dark:text-slate-400">{tm.response}</td>
+                  <td className="py-3 px-3 text-slate-500 dark:text-slate-400">{tm.won}</td>
+                  <td className="py-3 px-3 text-right text-slate-400 dark:text-slate-500">{tm.winRate}</td>
                 </tr>
               ))}
             </tbody>
@@ -296,36 +296,36 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
       </div>
 
       {/* Row 5: Score Band Distribution */}
-      <div className="bg-white border border-slate-200 rounded-sm p-6 space-y-5 shadow-2xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-6 space-y-5 shadow-2xs">
         <div>
-          <h3 className="text-base font-serif font-bold text-slate-900">Score band distribution</h3>
-          <p className="text-xs text-slate-500">
+          <h3 className="text-base font-serif font-bold text-slate-900 dark:text-slate-100">Score band distribution</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             How Layer A is rating the jobs you process. Concentration in 50–70 is healthy; a fat left tail means upstream filtering needs work.
           </p>
         </div>
 
         {/* Score band bar chart */}
-        <div className="h-48 flex items-end gap-2 pt-8 pb-4 border-b border-slate-100 px-2">
+        <div className="h-48 flex items-end gap-2 pt-8 pb-4 border-b border-slate-100 dark:border-slate-800 px-2">
           {scoreBands.map((sb, idx) => {
             const maxVal = 62;
             const heightPct = sb.count > 0 ? Math.max((sb.count / maxVal) * 100, 10) : 4;
             
-            let barColor = 'bg-slate-200';
+            let barColor = 'bg-slate-200 dark:bg-slate-700';
             if (sb.highlight === 'blue') barColor = 'bg-sky-500';
             if (sb.highlight === 'emerald') barColor = 'bg-emerald-500';
 
             return (
               <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 group relative">
-                <span className="text-[10px] font-mono font-bold text-slate-700">
+                <span className="text-[10px] font-mono font-bold text-slate-700 dark:text-slate-300">
                   {sb.count}
                 </span>
-                <div className="w-full bg-slate-50 h-32 flex items-end rounded-sm overflow-hidden">
+                <div className="w-full bg-slate-50 dark:bg-slate-800 h-32 flex items-end rounded-sm overflow-hidden">
                   <div
                     className={`w-full transition-all ${barColor}`}
                     style={{ height: `${heightPct}%` }}
                   />
                 </div>
-                <span className="text-[10px] font-mono text-slate-500">
+                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
                   {sb.band}
                 </span>
               </div>
@@ -338,39 +338,39 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Top Creators */}
-        <div className="bg-white border border-slate-200 rounded-sm p-6 space-y-4 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-6 space-y-4 shadow-2xs">
           <div>
-            <h3 className="text-base font-serif font-bold text-slate-900">Top creators</h3>
-            <p className="text-xs text-slate-500">Drafts generated by each teammate, with their personal win rate.</p>
+            <h3 className="text-base font-serif font-bold text-slate-900 dark:text-slate-100">Top creators</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Drafts generated by each teammate, with their personal win rate.</p>
           </div>
 
-          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-sm flex items-center justify-between text-xs font-mono">
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-sm flex items-center justify-between text-xs font-mono">
             <div>
-              <div className="font-bold text-slate-900 font-sans text-xs">{userName}</div>
-              <div className="text-[11px] text-slate-500">{userEmail}</div>
+              <div className="font-bold text-slate-900 dark:text-slate-100 font-sans text-xs">{userName}</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">{userEmail}</div>
             </div>
             <div className="text-right">
-              <div className="font-bold text-slate-900">123 drafts</div>
-              <div className="text-[10px] text-slate-400">no labels · avg 65</div>
+              <div className="font-bold text-slate-900 dark:text-slate-100">123 drafts</div>
+              <div className="text-[10px] text-slate-400 dark:text-slate-500">no labels · avg 65</div>
             </div>
           </div>
         </div>
 
         {/* Top Profiles */}
-        <div className="bg-white border border-slate-200 rounded-sm p-6 space-y-4 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-6 space-y-4 shadow-2xs">
           <div>
-            <h3 className="text-base font-serif font-bold text-slate-900">Top profiles</h3>
-            <p className="text-xs text-slate-500">Which profiles get the most use, and which actually convert.</p>
+            <h3 className="text-base font-serif font-bold text-slate-900 dark:text-slate-100">Top profiles</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Which profiles get the most use, and which actually convert.</p>
           </div>
 
-          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-sm flex items-center justify-between text-xs font-mono">
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-sm flex items-center justify-between text-xs font-mono">
             <div>
-              <div className="font-bold text-slate-900 font-sans text-xs">Logo Design and Brand Identity</div>
-              <div className="text-[11px] text-slate-500">Active variant · 142 atoms linked</div>
+              <div className="font-bold text-slate-900 dark:text-slate-100 font-sans text-xs">Logo Design and Brand Identity</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">Active variant · 142 atoms linked</div>
             </div>
             <div className="text-right">
-              <div className="font-bold text-slate-900">123 drafts</div>
-              <div className="text-[10px] text-slate-400">no labels · avg 65</div>
+              <div className="font-bold text-slate-900 dark:text-slate-100">123 drafts</div>
+              <div className="text-[10px] text-slate-400 dark:text-slate-500">no labels · avg 65</div>
             </div>
           </div>
         </div>
@@ -381,22 +381,22 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Top Proof */}
-        <div className="bg-white border border-slate-200 rounded-sm p-6 space-y-4 shadow-2xs flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-6 space-y-4 shadow-2xs flex flex-col justify-between">
           <div>
-            <h3 className="text-base font-serif font-bold text-slate-900">Top proof</h3>
-            <p className="text-xs text-slate-500">Most-pulled proof from the library. Stale top entries hint at a need for fresh content.</p>
+            <h3 className="text-base font-serif font-bold text-slate-900 dark:text-slate-100">Top proof</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Most-pulled proof from the library. Stale top entries hint at a need for fresh content.</p>
 
             <div className="space-y-3 mt-4 text-xs font-mono max-h-72 overflow-y-auto pr-1">
               {topProofItems.map((tp, idx) => (
-                <div key={idx} className="border-b border-slate-100 pb-2 space-y-1">
+                <div key={idx} className="border-b border-slate-100 dark:border-slate-800 pb-2 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 px-1.5 py-0.5 rounded-sm">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-sm">
                       {tp.type}
                     </span>
-                    <span className="text-[10px] text-slate-400">{tp.count}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">{tp.count}</span>
                   </div>
-                  <div className="font-semibold text-slate-800 text-[11px] truncate">{tp.title}</div>
-                  <div className="text-[10px] text-slate-500 line-clamp-1">{tp.snippet}</div>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] truncate">{tp.title}</div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1">{tp.snippet}</div>
                 </div>
               ))}
             </div>
@@ -404,94 +404,94 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
         </div>
 
         {/* Library Health */}
-        <div className="bg-white border border-slate-200 rounded-sm p-6 space-y-4 shadow-2xs flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-6 space-y-4 shadow-2xs flex flex-col justify-between">
           <div>
-            <h3 className="text-base font-serif font-bold text-slate-900">Library health</h3>
-            <p className="text-xs text-slate-500">Coverage across the seven proof types — gaps surface here.</p>
+            <h3 className="text-base font-serif font-bold text-slate-900 dark:text-slate-100">Library health</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Coverage across the seven proof types — gaps surface here.</p>
 
             {/* Metrics */}
-            <div className="grid grid-cols-3 gap-2 text-center my-4 font-mono border-y border-slate-100 py-3">
+            <div className="grid grid-cols-3 gap-2 text-center my-4 font-mono border-y border-slate-100 dark:border-slate-800 py-3">
               <div>
-                <div className="text-xl font-bold text-slate-900">94</div>
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider">PROOFS</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-slate-100">94</div>
+                <div className="text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">PROOFS</div>
               </div>
               <div>
-                <div className="text-xl font-bold text-slate-900">1</div>
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider">PROFILES</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-slate-100">1</div>
+                <div className="text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">PROFILES</div>
               </div>
               <div>
-                <div className="text-xl font-bold text-slate-900">33</div>
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider">SHAPES</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-slate-100">33</div>
+                <div className="text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">SHAPES</div>
               </div>
             </div>
 
             {/* Breakdown List */}
             <div className="space-y-2 text-xs font-mono">
-              <div className="flex justify-between text-slate-700">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300">
                 <span>Case study</span>
                 <span className="font-bold">4</span>
               </div>
-              <div className="w-full bg-slate-100 h-1.5 rounded-sm overflow-hidden mb-2">
-                <div className="bg-slate-700 h-full w-[15%]" />
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-sm overflow-hidden mb-2">
+                <div className="bg-slate-700 dark:bg-slate-300 h-full w-[15%]" />
               </div>
 
-              <div className="flex justify-between text-slate-700">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300">
                 <span>Opening</span>
                 <span className="font-bold">85</span>
               </div>
-              <div className="w-full bg-slate-100 h-1.5 rounded-sm overflow-hidden mb-2">
-                <div className="bg-slate-900 h-full w-[90%]" />
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-sm overflow-hidden mb-2">
+                <div className="bg-slate-900 dark:bg-slate-100 h-full w-[90%]" />
               </div>
 
-              <div className="flex justify-between text-slate-700">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300">
                 <span>Metric</span>
                 <span className="font-bold">3</span>
               </div>
-              <div className="flex justify-between text-slate-700">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300">
                 <span>Risk</span>
                 <span className="font-bold">1</span>
               </div>
-              <div className="flex justify-between text-slate-700">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300">
                 <span>Phase</span>
                 <span className="font-bold">1</span>
               </div>
-              <div className="flex justify-between text-slate-700">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300">
                 <span>Pricing</span>
-                <span className="font-bold text-slate-400">0</span>
+                <span className="font-bold text-slate-400 dark:text-slate-500">0</span>
               </div>
-              <div className="flex justify-between text-slate-700">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300">
                 <span>Pain ref</span>
-                <span className="font-bold text-slate-400">0</span>
+                <span className="font-bold text-slate-400 dark:text-slate-500">0</span>
               </div>
             </div>
           </div>
 
-          <div className="text-[11px] font-mono text-slate-400 pt-3 border-t border-slate-100">
-            1 teammate · <button onClick={() => onNavigateTab?.('profiles')} className="underline hover:text-slate-900 cursor-pointer">manage team</button>
+          <div className="text-[11px] font-mono text-slate-400 dark:text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
+            1 teammate · <button onClick={() => onNavigateTab?.('profiles')} className="underline hover:text-slate-900 dark:hover:text-white cursor-pointer">manage team</button>
           </div>
         </div>
 
         {/* Model Usage */}
-        <div className="bg-white border border-slate-200 rounded-sm p-6 space-y-4 shadow-2xs flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-6 space-y-4 shadow-2xs flex flex-col justify-between">
           <div>
-            <h3 className="text-base font-serif font-bold text-slate-900">Model usage</h3>
-            <p className="text-xs text-slate-500">Generation cost by model. 586.5k tokens consumed.</p>
+            <h3 className="text-base font-serif font-bold text-slate-900 dark:text-slate-100">Model usage</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Generation cost by model. 586.5k tokens consumed.</p>
 
-            <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-sm space-y-3 font-mono text-xs">
+            <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-sm space-y-3 font-mono text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-900 text-xs">anthropic:claude-sonnet-4-6</span>
-                <span className="font-bold text-slate-900">123 drafts</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">anthropic:claude-sonnet-4-6</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100">123 drafts</span>
               </div>
-              <div className="text-[11px] text-slate-500">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">
                 549.0k in · 37.5k out tokens
               </div>
-              <div className="w-full bg-slate-200 h-2 rounded-sm overflow-hidden">
+              <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-sm overflow-hidden">
                 <div className="bg-emerald-600 h-full w-[94%]" />
               </div>
             </div>
           </div>
 
-          <div className="text-[11px] font-mono text-slate-400 pt-3 border-t border-slate-100">
+          <div className="text-[11px] font-mono text-slate-400 dark:text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
             Optimized pipeline active
           </div>
         </div>
@@ -499,15 +499,15 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
       </div>
 
       {/* Row 8: Recent Activity Table */}
-      <div className="bg-white border border-slate-200 rounded-sm p-6 space-y-4 shadow-2xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-6 space-y-4 shadow-2xs">
         <div>
-          <h3 className="text-base font-serif font-bold text-slate-900">Recent activity</h3>
-          <p className="text-xs text-slate-500">Last 10 drafts across the workspace.</p>
+          <h3 className="text-base font-serif font-bold text-slate-900 dark:text-slate-100">Recent activity</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Last 10 drafts across the workspace.</p>
         </div>
 
-        <div className="divide-y divide-slate-100 font-mono text-xs">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800 font-mono text-xs">
           {recentActivities.map((act) => (
-            <div key={act.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/70 p-2 rounded-sm transition-colors">
+            <div key={act.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 p-2 rounded-sm transition-colors">
               <div className="flex items-start gap-3">
                 <div className={`px-2 py-1 rounded-sm border font-bold text-[10px] text-center shrink-0 w-16 ${act.color}`}>
                   <div>{act.score}</div>
@@ -515,14 +515,14 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <div className="font-sans font-bold text-slate-900 text-sm hover:underline cursor-pointer">
+                  <div className="font-sans font-bold text-slate-900 dark:text-slate-100 text-sm hover:underline cursor-pointer">
                     {act.title}
                   </div>
-                  <div className="text-[11px] text-slate-500 font-sans">
-                    {act.postDate} · <span className="font-mono text-[10px] text-slate-400">{act.summary}</span>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-sans">
+                    {act.postDate} · <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">{act.summary}</span>
                   </div>
-                  <div className="text-[10px] text-slate-400">
-                    {act.date} · <span className="text-amber-700 bg-amber-50 px-1 py-0.2 border border-amber-200 rounded-sm">{act.status}</span> · {act.author}
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500">
+                    {act.date} · <span className="text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1 py-0.2 border border-amber-200 dark:border-amber-800 rounded-sm">{act.status}</span> · {act.author}
                   </div>
                 </div>
               </div>
@@ -530,7 +530,7 @@ export const DashboardOverviewView: React.FC<DashboardOverviewProps> = ({
               <div className="shrink-0 text-right">
                 <button 
                   onClick={() => onNavigateTab?.('proposals')}
-                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-sm text-[11px] font-bold cursor-pointer transition-colors"
+                  className="px-3 py-1.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-sm text-[11px] font-bold cursor-pointer transition-colors"
                 >
                   View draft
                 </button>
