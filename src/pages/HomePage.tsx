@@ -105,10 +105,10 @@ export const HomePage: React.FC = () => {
           {/* Quick Action CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/proposals/new')}
               className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-slate-900 hover:bg-[#27241e] text-slate-50 font-bold text-sm tracking-wide transition-all shadow-lg hover:shadow-xl active:scale-98 flex items-center justify-center gap-2 cursor-pointer font-mono"
             >
-              <span>Launch Proposal Dashboard</span>
+              <span>Create Proposal</span>
               <ArrowRight className="w-4 h-4 text-slate-200" />
             </button>
 
@@ -590,10 +590,10 @@ export const HomePage: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/proposals/new')}
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm font-mono tracking-wider uppercase transition-all shadow-lg cursor-pointer"
             >
-              Launch Proposal Dashboard
+              Create Proposal
             </button>
 
             <button
