@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
-import { Play, Sparkles, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Play } from 'lucide-react';
 
 export const VideoDemoSection: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   return (
-    <section className="py-20 bg-[#FAF9F5] border-b border-[#EAE6DF]">
+    <section className="py-20 bg-slate-50 border-b border-slate-200">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900 text-white text-xs font-semibold shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-sm bg-slate-900 text-white text-xs font-semibold shadow-xs">
             <span>Live Product Tour</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-semibold text-[#1C1A17] tracking-tight font-serif">
+          <h2 className="text-3xl sm:text-5xl font-semibold text-slate-900 tracking-tight font-serif">
             See how Proposala analyzes an Upwork post in 45 seconds
           </h2>
           <p className="text-slate-600 text-base sm:text-lg">
@@ -23,7 +22,7 @@ export const VideoDemoSection: React.FC = () => {
         </div>
 
         {/* Video Player Box / Frame */}
-        <div className="relative rounded-3xl overflow-hidden border border-[#E0DACF] bg-slate-900 shadow-2xl group">
+        <div className="relative rounded-sm overflow-hidden border border-slate-200 bg-slate-900 shadow-2xl group">
           {!isPlaying ? (
             <div
               onClick={() => setIsPlaying(true)}
@@ -39,9 +38,9 @@ export const VideoDemoSection: React.FC = () => {
                   <span>[Live Stream Preview]</span>
                 </div>
                 <div className="grid grid-cols-3 gap-6 my-auto text-slate-300">
-                  <div className="p-4 bg-slate-800 rounded-xl border border-slate-700">Client Score: 94/100</div>
-                  <div className="p-4 bg-slate-800 rounded-xl border border-slate-700">Risk: Low (Verified)</div>
-                  <div className="p-4 bg-slate-800 rounded-xl border border-slate-700">Matched 2 Case Studies</div>
+                  <div className="p-4 bg-slate-800 rounded-sm border border-slate-700">Client Score: 94/100</div>
+                  <div className="p-4 bg-slate-800 rounded-sm border border-slate-700">Risk: Low (Verified)</div>
+                  <div className="p-4 bg-slate-800 rounded-sm border border-slate-700">Matched 2 Case Studies</div>
                 </div>
                 <div className="flex justify-between border-t border-emerald-500/30 pt-4 text-slate-400">
                   <span>Target: React SaaS Dashboard Optimization</span>
@@ -51,8 +50,8 @@ export const VideoDemoSection: React.FC = () => {
 
               {/* Center Play Button & Callout */}
               <div className="relative z-10 flex flex-col items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shadow-2xl shadow-emerald-500/50 transform group-hover:scale-110 transition-all duration-300">
-                  <Play className="w-8 h-8 fill-slate-950 ml-1" />
+                <div className="w-16 h-16 rounded-sm bg-emerald-500 text-slate-950 flex items-center justify-center shadow-xl transform group-hover:scale-105 transition-all duration-300">
+                  <Play className="w-7 h-7 fill-slate-950 ml-1" />
                 </div>
                 <div className="text-center space-y-1">
                   <span className="text-white text-base font-bold font-serif tracking-wide block">
@@ -65,15 +64,14 @@ export const VideoDemoSection: React.FC = () => {
               </div>
 
               {/* Bottom Badge Bar */}
-              <div className="absolute bottom-6 left-6 right-6 z-10 hidden sm:flex items-center justify-between text-xs text-slate-300 bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <div className="absolute bottom-6 left-6 right-6 z-10 hidden sm:flex items-center justify-between text-xs text-slate-300 bg-slate-900/90 p-3.5 rounded-sm border border-slate-800">
+                <div className="flex items-center gap-2 font-medium">
                   <span>Connect Protection Engine in action</span>
                 </div>
                 <div className="flex items-center gap-4 text-[11px] text-slate-400">
-                  <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> 0-100 Score</span>
-                  <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Portfolio Match</span>
-                  <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Instant Draft</span>
+                  <span>✓ 0-100 Score</span>
+                  <span>✓ Portfolio Match</span>
+                  <span>✓ Instant Draft</span>
                 </div>
               </div>
             </div>
