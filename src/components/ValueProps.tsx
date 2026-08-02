@@ -1,11 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Target, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export const ValueProps: React.FC = () => {
   const cards = [
     {
-      icon: ShieldCheck,
       badge: 'Connect Protection',
       title: 'Save your Connects',
       subtitle: 'See which jobs are good before you write',
@@ -15,12 +13,9 @@ export const ValueProps: React.FC = () => {
         'Score 0-100 indicating exact ROI to apply',
         'Stop wasting connects on jobs you won\'t win',
       ],
-      color: 'bg-emerald-50/50',
       borderColor: 'border-emerald-200',
-      iconColor: 'text-emerald-600',
     },
     {
-      icon: Target,
       badge: 'Portfolio Matching',
       title: 'Use the right past work',
       subtitle: 'Mention matching projects automatically',
@@ -30,12 +25,9 @@ export const ValueProps: React.FC = () => {
         'Pulls real metrics & outcomes (e.g. "+32% conversion")',
         'Never forget relevant past work during fast bidding',
       ],
-      color: 'bg-teal-50/50',
       borderColor: 'border-teal-200',
-      iconColor: 'text-teal-600',
     },
     {
-      icon: Sparkles,
       badge: 'Draft Generator',
       title: 'Start from a better draft',
       subtitle: 'Edit the strongest proposal instantly',
@@ -45,9 +37,7 @@ export const ValueProps: React.FC = () => {
         'Focuses on problem diagnosis and client outcome',
         'Custom tone presets: Direct, Value-First, Technical',
       ],
-      color: 'bg-cyan-50/50',
       borderColor: 'border-cyan-200',
-      iconColor: 'text-cyan-600',
     },
   ];
 
@@ -57,7 +47,7 @@ export const ValueProps: React.FC = () => {
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-16">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 inline-block">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-3 py-1 rounded-sm border border-emerald-200 inline-block">
             Why Upwork Freelancers & Agencies Choose Proposala
           </h2>
           <p className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight font-display">
@@ -70,59 +60,52 @@ export const ValueProps: React.FC = () => {
 
         {/* 3 Core Value Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {cards.map((card, idx) => {
-            const Icon = card.icon;
-            return (
-              <div
-                key={idx}
-                className={`relative rounded-2xl bg-white p-8 border ${card.borderColor} shadow-xs flex flex-col justify-between group hover:shadow-md transition-all duration-300`}
-              >
-                <div className="relative z-10 space-y-5">
-                  <div className="flex items-center justify-between">
-                    <div className={`w-12 h-12 rounded-xl ${card.color} border ${card.borderColor} flex items-center justify-center`}>
-                      <Icon className={`w-6 h-6 ${card.iconColor}`} />
-                    </div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                      {card.badge}
-                    </span>
-                  </div>
+          {cards.map((card, idx) => (
+            <div
+              key={idx}
+              className={`relative rounded-sm bg-white p-8 border ${card.borderColor} shadow-xs flex flex-col justify-between group hover:shadow-md transition-all duration-300`}
+            >
+              <div className="relative z-10 space-y-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-sm bg-slate-100 text-slate-700 border border-slate-200">
+                    {card.badge}
+                  </span>
+                </div>
 
-                  <div>
-                    <h3 className="text-2xl font-bold text-slate-900 tracking-tight font-display">
-                      {card.title}
-                    </h3>
-                    <p className="text-sm font-semibold text-emerald-700 mt-1">
-                      {card.subtitle}
-                    </p>
-                  </div>
-
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    {card.description}
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-900 tracking-tight font-display">
+                    {card.title}
+                  </h3>
+                  <p className="text-sm font-semibold text-emerald-700 mt-1">
+                    {card.subtitle}
                   </p>
-
-                  <ul className="space-y-2.5 pt-2 border-t border-slate-100 text-xs text-slate-600">
-                    {card.points.map((pt, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>{pt}</span>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
 
-                <div className="relative z-10 pt-6 mt-6 border-t border-slate-100">
-                  <Link
-                    to="/analyzer"
-                    className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-xs font-semibold text-slate-800 flex items-center justify-center gap-2 transition-all"
-                  >
-                    <span>Try with Live Job</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-emerald-600" />
-                  </Link>
-                </div>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  {card.description}
+                </p>
 
+                <ul className="space-y-2.5 pt-2 border-t border-slate-100 text-xs text-slate-600">
+                  {card.points.map((pt, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                      <span>{pt}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            );
-          })}
+
+              <div className="relative z-10 pt-6 mt-6 border-t border-slate-100">
+                <Link
+                  to="/analyzer"
+                  className="w-full py-2.5 px-4 rounded-sm bg-slate-100 hover:bg-slate-200 border border-slate-300 text-xs font-semibold text-slate-800 flex items-center justify-center transition-all"
+                >
+                  Try with Live Job
+                </Link>
+              </div>
+
+            </div>
+          ))}
         </div>
 
       </div>
