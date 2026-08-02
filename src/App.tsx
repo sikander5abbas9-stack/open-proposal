@@ -57,6 +57,7 @@ export default function App() {
             <Route element={<AppWorkspaceLayout />}>
               <Route path="/dashboard" element={<JobAnalyzerPage />} />
               <Route path="/proposals/new" element={<JobAnalyzerPage />} />
+              <Route path="/proposal/new" element={<JobAnalyzerPage />} />
               <Route path="/analyzer" element={<JobAnalyzerPage />} />
               <Route path="/analyzer/:jobId" element={<JobAnalyzerPage />} />
               <Route path="/proposals" element={<JobAnalyzerPage />} />
